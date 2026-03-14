@@ -67,7 +67,7 @@ print(
 
 ## Filtering
 
-You can prevent individual parameters from being displayed. To do this, pass a `dict` to the `filters` parameter. Keys identify arguments by index or name. Values are functions returning `bool`, where `True` keeps the argument and `False` skips it:
+You can prevent individual parameters from being displayed. To do this, pass a `dict` to the `filters` parameter. Keys identify arguments by index or name. Values are functions that return a `bool`, where `True` keeps the argument and `False` skips it:
 
 ```python
 print(
