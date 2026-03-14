@@ -23,4 +23,11 @@ def test_superrepr_for_named_function():
 
 
 def test_superrepr_for_lambda_function():
-    assert superrepr(lambda x: x) == "λ"
+    assert superrepr(lambda x: x) == "lambda x: x"
+
+
+def test_superrepr_for_lambda_functions_when_they_are_multple_in_one_line():
+    lambdas = [lambda x: x, lambda y: y]
+
+    assert superrepr(lambdas[0]) == "λ"
+    assert superrepr(lambdas[1]) == "λ"
