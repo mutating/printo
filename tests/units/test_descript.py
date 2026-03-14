@@ -220,19 +220,19 @@ def test_named_functions_as_arguments():
 
 
 def test_lambdas_as_arguments():
-    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {}) == 'ClassName(1, 2, 3, λ)'
-    assert describe_data_object('ClassName', (lambda x: x,), {}) == 'ClassName(λ)'
+    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {}) == 'ClassName(1, 2, 3, lambda x: x)'
+    assert describe_data_object('ClassName', (lambda x: x,), {}) == 'ClassName(lambda x: x)'
     assert describe_data_object('ClassName', (lambda x: x,), {'function': lambda x: x}) == 'ClassName(λ, function=λ)'
-    assert describe_data_object('ClassName', (), {'function': lambda x: x}) == 'ClassName(function=λ)'
+    assert describe_data_object('ClassName', (), {'function': lambda x: x}) == 'ClassName(function=lambda x: x)'
     assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'function': lambda x: x}) == 'ClassName(1, 2, 3, λ, function=λ)'
 
 
 def test_simple_placeholders():
-    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek'}, placeholders={}) == 'ClassName(1, 2, 3, λ, lol=\'kek\')'
-    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek'}, placeholders=None) == 'ClassName(1, 2, 3, λ, lol=\'kek\')'
-    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek'}, placeholders={'lol': '***'}) == 'ClassName(1, 2, 3, λ, lol=***)'
-    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek', 'kek': 'lol'}, placeholders={'lol': '***'}) == 'ClassName(1, 2, 3, λ, lol=***, kek=\'lol\')'
-    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek', 'kek': 'lol'}, placeholders={'lol': '***', 0: '***'}) == 'ClassName(***, 2, 3, λ, lol=***, kek=\'lol\')'
+    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek'}, placeholders={}) == 'ClassName(1, 2, 3, lambda x: x, lol=\'kek\')'
+    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek'}, placeholders=None) == 'ClassName(1, 2, 3, lambda x: x, lol=\'kek\')'
+    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek'}, placeholders={'lol': '***'}) == 'ClassName(1, 2, 3, lambda x: x, lol=***)'
+    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek', 'kek': 'lol'}, placeholders={'lol': '***'}) == 'ClassName(1, 2, 3, lambda x: x, lol=***, kek=\'lol\')'
+    assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek', 'kek': 'lol'}, placeholders={'lol': '***', 0: '***'}) == 'ClassName(***, 2, 3, lambda x: x, lol=***, kek=\'lol\')'
     assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek', 'kek': 'lol'}, placeholders={'lol': '***', 0: '***', 3: '***'}) == 'ClassName(***, 2, 3, ***, lol=***, kek=\'lol\')'
     assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek', 'kek': 'lol'}, placeholders={'lol': '***', 0: '***', 3: '***', 'kek': '&'}) == 'ClassName(***, 2, 3, ***, lol=***, kek=&)'
     assert describe_data_object('ClassName', (1, 2, 3, lambda x: x), {'lol': 'kek', 'kek': 'lol'}, placeholders={'lol': '🔒', 0: '***', 3: '***', 'kek': '&'}) == 'ClassName(***, 2, 3, ***, lol=🔒, kek=&)'

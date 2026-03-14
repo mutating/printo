@@ -1,13 +1,18 @@
 from inspect import isclass, isfunction
 from typing import Any
 
+from getsources import UncertaintyWithLambdasError, getclearsource
+
 
 def superrepr(value: Any) -> str:
     if isfunction(value):
         result = value.__name__
 
         if result == '<lambda>':
-            return 'λ'
+            try:
+                return getclearsource(value)
+            except UncertaintyWithLambdasError:
+                return 'λ'
 
         return result
 

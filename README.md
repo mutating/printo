@@ -18,7 +18,7 @@
 ![logo](https://raw.githubusercontent.com/mutating/printo/develop/docs/assets/logo_1.svg)
 
 
-There is an implicit agreement among Pythonistas to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. `__repr__` of `1` returns `"1"`, and `__repr__` of `None` returns `"None"`. With this library, you can easily implement `__repr__` for your own classes following this convention.
+Pythonistas follow an implicit convention to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. `__repr__` of `1` returns `"1"`, and `__repr__` of `None` returns `"None"`. With this library, you can easily implement `__repr__` for your own classes to follow this convention.
 
 
 ## Table of contents
@@ -43,11 +43,11 @@ You can also use [`instld`](https://github.com/pomponchik/instld) to quickly try
 
 ## Basic usage
 
-The main function in this library is `describe_data_object`; it returns a string representing what your object's initialization code should look like. There are three required positional parameters:
+The main function in this library is `describe_data_object`; it returns a string representing the initialization code for your object. There are three required positional parameters:
 
-- The name of the class for which you are creating a representation.
+- A class name.
 - A `list` or `tuple` of positional arguments.
-- A `dict` with keyword arguments, where the keys are the names of the arguments, and the values are any objects.
+- A `dict` of keyword arguments, where the keys are the names of the arguments, and the values are arbitrary objects.
 
 Here's a simple example of how it works:
 
@@ -67,7 +67,7 @@ print(
 
 ## Filtering
 
-You can prevent individual parameters from being displayed. To do this, pass a `dict` to the `filters` parameter. Keys identify arguments by index or name. Values are functions returning `bool`, where `True` keeps the argument and `False` skips it:
+You can prevent individual parameters from being displayed. To do this, pass a `dict` to the `filters` parameter. The keys identify arguments by index or name. The values are functions that return a `bool` — `True` keeps the argument and `False` skips it:
 
 ```python
 print(
@@ -81,7 +81,7 @@ print(
 #> MyClassName(1, 'some text', variable_name=1)
 ```
 
-You can also use the built-in `not_none` filter to automatically exclude `None` values:
+You can also use the provided `not_none` filter to automatically exclude `None` values:
 
 ```python
 from printo import not_none
@@ -100,13 +100,13 @@ print(
 
 ## Custom display of objects
 
-By default, all argument values are represented in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function. There are only three exceptions:
+By default, all argument values are represented in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function would show them. There are only three exceptions:
 
 - For regular functions, the function name is displayed.
 - For classes, the class name is displayed.
-- For lambda functions, just the `λ` symbol is displayed, because there is no reliable way to display the source code of a lambda function in Python.
+- For lambda functions, the complete source code is displayed. However, if a single line of source code contains more than one lambda function, only the `λ` symbol is displayed (this is a technical limitation of source code reflection in Python).
 
-You can provide a custom `repr` function for each argument value; use the `serializer` parameter for this:
+You can provide a custom serialization function for each argument value via the `serializer` parameter:
 
 ```python
 print(
@@ -123,9 +123,9 @@ print(
 
 ## Placeholders
 
-For individual parameters, you can pass predefined strings that will be displayed instead of the actual values. This can be useful, for example, to hide the values of secret fields when serializing objects.
+For individual parameters, you can pass predefined strings that will be displayed instead of the actual values. This can be useful, for example, to hide the values of sensitive fields when serializing objects.
 
-Use the `placeholders` parameter for this by passing a dictionary, where the keys are argument names (for keyword arguments) or indices (for positional parameters, zero-indexed), and the values are strings:
+Pass a `dict` to the `placeholders` parameter, where the keys are argument names (for keyword arguments) or indices (for positional parameters, zero-indexed), and the values are strings:
 
 ```python
 print(
