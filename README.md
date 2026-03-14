@@ -18,7 +18,7 @@
 ![logo](https://raw.githubusercontent.com/mutating/printo/develop/docs/assets/logo_1.svg)
 
 
-There is an implicit agreement among pythonistas to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text as close as possible to the code used to construct the object. `__repr__` of `1` returns `"1"`, and `__repr__` of `None` returns `"None"`. With this library, you can easily implement `__repr__` for your own classes following this convention.
+There is an implicit agreement among Pythonistas to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text as close as possible to the code used to construct the object. `__repr__` of `1` returns `"1"`, and `__repr__` of `None` returns `"None"`. With this library, you can easily implement `__repr__` for your own classes following this convention.
 
 
 ## Table of contents
@@ -32,7 +32,7 @@ There is an implicit agreement among pythonistas to create special [`__repr__`](
 
 ## Installation
 
-You can install [`printo`](https://pypi.python.org/pypi/printo) with `pip`:
+You can install [`printo`](https://pypi.org/project/printo) with `pip`:
 
 ```bash
 pip install printo
@@ -67,7 +67,7 @@ print(
 
 ## Filtering
 
-You can prevent individual fields from being displayed. To do this, pass a `dict` as the `filters` parameter, in which the argument numbers (zero-indexed) for positional arguments or the argument names for keyword arguments will be used as keys, and `bool`-returning functions (returning `True` to include the argument, `False` to exclude it) will be used as values:
+You can prevent individual fields from being displayed. To do this, pass a `dict` as the `filters` parameter, in which the argument indices (zero-indexed) for positional arguments or the argument names for keyword arguments will be used as keys, and `bool`-returning functions (returning `True` to include the argument, `False` to exclude it) will be used as values:
 
 ```python
 print(
@@ -81,7 +81,7 @@ print(
 #> MyClassName(1, 'some text', variable_name=1)
 ```
 
-You can also reduce boilerplate by specifying a function as a filter that automatically filters out `None` values:
+You can also use the built-in `not_none` filter to automatically exclude `None` values:
 
 ```python
 from printo import not_none
@@ -100,13 +100,13 @@ print(
 
 ## Custom display of objects
 
-By default, all argument values are represented in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function does. There are only three exceptions:
+By default, all argument values are represented in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function. There are only three exceptions:
 
-- For ordinary functions, just the function name is displayed.
+- For ordinary functions, the function name is displayed.
 - For classes, the class name is displayed.
-- For lambda functions, just the `λ` symbol is displayed instead. This is done because there is no reliable way to display the source code of a lambda function in Python.
+- For lambda functions, just the `λ` symbol is displayed. This is done because there is no reliable way to display the source code of a lambda function in Python.
 
-You can use your own function as a repr function for all your objects; use the `serializer` parameter for this:
+You can provide a custom `repr` function for all your objects; use the `serializer` parameter for this:
 
 ```python
 print(
@@ -125,7 +125,7 @@ print(
 
 For individual fields, you can pass predefined strings that will be displayed instead of the actual values. This can be useful, for example, to hide the values of secret fields when serializing objects.
 
-Use the `placeholders` parameter for this by passing a dictionary, where the keys are parameter names (for keyword arguments) or the indices (for positional parameters, zero-indexed), and the values are strings:
+Use the `placeholders` parameter for this by passing a dictionary, where the keys are argument names (for keyword arguments) or the indices (for positional parameters, zero-indexed), and the values are strings:
 
 ```python
 print(
@@ -142,4 +142,4 @@ print(
 #> MySuperClass(1, ***, 'lol', variable_name=***, second_variable_name='kek')
 ```
 
-> 🤓 Please note that if you set a placeholder for a parameter, the [custom serializer](#custom-display-of-objects) will no longer be applied to it.
+> 🤓 Please note that if you set a placeholder for a parameter, the [custom serializer](#custom-display-of-objects) will not be applied to it.
