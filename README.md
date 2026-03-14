@@ -43,11 +43,11 @@ You can also use [`instld`](https://github.com/pomponchik/instld) to quickly try
 
 ## Basic usage
 
-The main function in this library is `describe_data_object`; it returns a string representing what your object's initialization code should look like. There are three required positional parameters:
+The main function in this library is `describe_data_object`; it returns a string representing the initialization code for your object. There are three required positional parameters:
 
 - The name of the class for which you are creating a representation.
 - The `list` or `tuple` of positional arguments.
-- The `dict` with keyword arguments, where the keys are the names of the arguments, and the values are any objects.
+- The `dict` of keyword arguments, where the keys are the names of the arguments, and the values are any objects.
 
 Here's a simple example of how it works:
 
@@ -67,7 +67,7 @@ print(
 
 ## Filtering
 
-You can prevent individual parameters from being displayed. To do this, pass a `dict` to the `filters` parameter. Keys identify arguments by index or name. Values are functions that return a `bool`, where `True` keeps the argument and `False` skips it:
+You can prevent individual parameters from being displayed. To do this, pass a `dict` to the `filters` parameter. The keys identify arguments by index or name. The values are functions that return a `bool`, where `True` keeps the argument and `False` skips it:
 
 ```python
 print(
@@ -100,7 +100,7 @@ print(
 
 ## Custom display of objects
 
-By default, all argument values are represented in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function. There are only three exceptions:
+By default, all argument values are represented in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function would represent them. There are only three exceptions:
 
 - For regular functions, the function name is displayed.
 - For classes, the class name is displayed.
@@ -125,7 +125,7 @@ print(
 
 For individual parameters, you can pass predefined strings that will be displayed instead of the actual values. This can be useful, for example, to hide the values of secret fields when serializing objects.
 
-Use the `placeholders` parameter for this by passing a dictionary, where the keys are argument names (for keyword arguments) or indices (for positional parameters, zero-indexed), and the values are strings:
+Pass a `dict` to the `placeholders` parameter, where the keys are argument names (for keyword arguments) or indices (for positional parameters, zero-indexed), and the values are strings:
 
 ```python
 print(
