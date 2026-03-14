@@ -17,7 +17,8 @@
 
 ![logo](https://raw.githubusercontent.com/mutating/printo/develop/docs/assets/logo_1.svg)
 
-There is an implicit agreement among pythonists to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods for classes that return text as similar as possible to the piece of code where the specific object was constructed. `__repr__` of `1` returns `"1"`, and repr of `None` returns `"None"`. With this library, you can create your own classes, the objects of which will obey this rule.
+
+There is an implicit agreement among pythonistas to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text as close as possible to the code used to construct the object. `__repr__` of `1` returns `"1"`, and `__repr__` of `None` returns `"None"`. With this library, you can create your own classes, whose objects will obey this rule.
 
 
 ## Table of contents
@@ -31,30 +32,30 @@ There is an implicit agreement among pythonists to create special [`__repr__`](h
 
 ## Installation
 
-You can install [`printo`](https://pypi.python.org/pypi/printo) using pip:
+You can install [`printo`](https://pypi.python.org/pypi/printo) with `pip`:
 
 ```bash
 pip install printo
 ```
 
-You can also quickly try out this and other packages without having to install using [instld](https://github.com/pomponchik/instld).
+You can also use [`instld`](https://github.com/pomponchik/instld) to quickly try this package and others without installing them.
 
 
 ## Basic usage
 
-The main function in this library is `descript_data_object`, it returns a string representing what your object's initialization code should look like. There are 3 required positional parameters:
+The main function in this library is `describe_data_object`; it returns a string representing what your object's initialization code should look like. There are three required positional parameters:
 
 - The name of the class for which we are creating a representation.
 - A `list` or `tuple` of positional arguments.
-- A `dict` with named arguments, where the keys are the names of the arguments, and the values are any objects.
+- A `dict` with keyword arguments, where the keys are the names of the arguments, and the values are any objects.
 
 Here's a simple example of how it works:
 
 ```python
-from printo import descript_data_object
+from printo import describe_data_object
 
 print(
-    descript_data_object(
+    describe_data_object(
         'MyClassName',
         (1, 2, 'some text'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -66,11 +67,11 @@ print(
 
 ## Filtering
 
-You can prevent individual fields from being displayed. To do this, pass a `dict` as the `filters` parameter, in which the argument numbers (counting starts from 0) for positional arguments or the argument names for named arguments will be used as keys, and returning `bool` functions (each of them answers the question "whether to display this argument", where `True` means "yes" and `False` means "no") will be used as values:
+You can prevent individual fields from being displayed. To do this, pass a `dict` as the `filters` parameter, in which the argument numbers (zero-indexed) for positional arguments or the argument names for keyword arguments will be used as keys, and `bool`-returning functions (each answering the question "whether to display this argument", where `True` means "yes" and `False` means "no") will be used as values:
 
 ```python
 print(
-    descript_data_object(
+    describe_data_object(
         'MyClassName',
         (1, 2, 'some text'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -80,13 +81,13 @@ print(
 #> MyClassName(1, 'some text', variable_name=1)
 ```
 
-You can also save a few characters by specifying a function as a filter that automatically filters `None` of the values:
+You can also save some typing by specifying a function as a filter that automatically filters out `None` values:
 
 ```python
 from printo import not_none
 
 print(
-    descript_data_object(
+    describe_data_object(
         'MyClassName',
         (1, None),
         {},
@@ -99,21 +100,21 @@ print(
 
 ## Custom display of objects
 
-By default, all your objects are serialized in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function does. There are only 3 exceptions:
+By default, all argument values are represented in the same way as the standard [`repr`](https://docs.python.org/3/library/functions.html#repr) function does. There are only three exceptions:
 
-- Ordinary functions, in their case, instead of the usual text, just the function name is displayed.
+- For ordinary functions, just the function name is displayed.
 - For classes, the class name is displayed.
-- Lambda functions, just the `λ` symbol is displayed instead. This is done because there is no reliable way to display the source code of a lambda function in Python.
+- For lambda functions, just the `λ` symbol is displayed instead. This is done because there is no reliable way to display the source code of a lambda function in Python.
 
-You can use your own function as a repr for all your objects, use the `serializator` parameter for this:
+You can use your own function as a repr function for all your objects; use the `serializer` parameter for this:
 
 ```python
 print(
-    descript_data_object(
+    describe_data_object(
         'MyClassName',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
-        serializator=lambda x: repr(x * 2),
+        serializer=lambda x: repr(x * 2),
     )
 )
 #> MyClassName(2, 4, 'lollol', variable_name=2, second_variable_name='kekkek')
@@ -124,11 +125,11 @@ print(
 
 For individual fields, you can pass predefined strings that will be displayed instead of the actual values. This can be useful, for example, to hide the values of secret fields when serializing objects.
 
-Use the `placeholders` parameter for this by passing a dictionary there, where the keys are parameter names (for named parameters) or their numbers (for positional parameters, numbering starts from 0), and the values are strings:
+Use the `placeholders` parameter for this by passing a dictionary, where the keys are parameter names (for keyword arguments) or their numbers (for positional parameters, zero-indexed), and the values are strings:
 
 ```python
 print(
-    descript_data_object(
+    describe_data_object(
         'MySuperClass',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
