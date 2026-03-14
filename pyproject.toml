@@ -4,7 +4,7 @@ build-backend = 'setuptools.build_meta'
 
 [project]
 name = 'printo'
-version = '0.0.14'
+version = '0.0.15'
 authors = [
   { name='Evgeniy Blinov', email='zheni-b@yandex.ru' },
 ]
@@ -12,7 +12,7 @@ description = 'Print objects with data beautifully'
 readme = 'README.md'
 requires-python = '>=3.8'
 dependencies = [
-    'sigmatch>=0.0.7'
+    'sigmatch>=0.0.8'
 ]
 classifiers = [
     'Operating System :: OS Independent',
@@ -27,6 +27,7 @@ classifiers = [
     'Programming Language :: Python :: 3.12',
     'Programming Language :: Python :: 3.13',
     'Programming Language :: Python :: 3.14',
+    'Programming Language :: Python :: 3.15',
     'Programming Language :: Python :: Free Threading',
     'Programming Language :: Python :: Free Threading :: 3 - Stable',
     'License :: OSI Approved :: MIT License',

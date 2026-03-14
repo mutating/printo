@@ -1,12 +1,12 @@
-from printo import descript_data_object, not_none
+from printo import describe_data_object, not_none
 
 
 def test_basic_usage():
-    assert descript_data_object('MyClassName', (1, 2, 'some text'), {'variable_name': 1, 'second_variable_name': 'kek'}) == "MyClassName(1, 2, 'some text', variable_name=1, second_variable_name='kek')"
+    assert describe_data_object('MyClassName', (1, 2, 'some text'), {'variable_name': 1, 'second_variable_name': 'kek'}) == "MyClassName(1, 2, 'some text', variable_name=1, second_variable_name='kek')"
 
 
 def test_basic_filtering():
-    assert descript_data_object(
+    assert describe_data_object(
         'MyClassName',
         (1, 2, 'some text'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -15,7 +15,7 @@ def test_basic_filtering():
 
 
 def test_filtering_of_nones():
-    assert descript_data_object(
+    assert describe_data_object(
         'MyClassName',
         (1, None),
         {},
@@ -24,16 +24,16 @@ def test_filtering_of_nones():
 
 
 def test_custom_serializator():
-    assert descript_data_object(
+    assert describe_data_object(
         'MyClassName',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
-        serializator=lambda x: repr(x * 2),
+        serializer=lambda x: repr(x * 2),
     ) == "MyClassName(2, 4, 'lollol', variable_name=2, second_variable_name='kekkek')"
 
 
 def test_placeholders():
-    assert descript_data_object(
+    assert describe_data_object(
         'MySuperClass',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
