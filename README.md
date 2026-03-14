@@ -45,7 +45,7 @@ You can also use [`instld`](https://github.com/pomponchik/instld) to quickly try
 
 The main function in this library is `describe_data_object`; it returns a string representing what your object's initialization code should look like. There are three required positional parameters:
 
-- The name of the class for which we are creating a representation.
+- The name of the class for which you are creating a representation.
 - A `list` or `tuple` of positional arguments.
 - A `dict` with keyword arguments, where the keys are the names of the arguments, and the values are any objects.
 
@@ -104,9 +104,9 @@ By default, all argument values are represented in the same way as the standard 
 
 - For regular functions, the function name is displayed.
 - For classes, the class name is displayed.
-- For lambda functions, just the `λ` symbol is displayed. This is done because there is no reliable way to display the source code of a lambda function in Python.
+- For lambda functions, just the `λ` symbol is displayed, because there is no reliable way to display the source code of a lambda function in Python.
 
-You can provide a custom `repr` function for all your objects; use the `serializer` parameter for this:
+You can provide a custom `repr` function for each argument value; use the `serializer` parameter for this:
 
 ```python
 print(
