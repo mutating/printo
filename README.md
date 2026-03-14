@@ -18,7 +18,7 @@
 ![logo](https://raw.githubusercontent.com/mutating/printo/develop/docs/assets/logo_1.svg)
 
 
-There is an implicit agreement among Pythonistas to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. `__repr__` of `1` returns `"1"`, and `__repr__` of `None` returns `"None"`. With this library, you can easily implement `__repr__` for your own classes following this convention.
+Pythonistas follow an implicit agreement to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. `__repr__` of `1` returns `"1"`, and `__repr__` of `None` returns `"None"`. With this library, you can easily implement `__repr__` for your own classes following this convention.
 
 
 ## Table of contents
@@ -46,8 +46,8 @@ You can also use [`instld`](https://github.com/pomponchik/instld) to quickly try
 The main function in this library is `describe_data_object`; it returns a string representing what your object's initialization code should look like. There are three required positional parameters:
 
 - The name of the class for which you are creating a representation.
-- A `list` or `tuple` of positional arguments.
-- A `dict` with keyword arguments, where the keys are the names of the arguments, and the values are any objects.
+- The `list` or `tuple` of positional arguments.
+- The `dict` with keyword arguments, where the keys are the names of the arguments, and the values are any objects.
 
 Here's a simple example of how it works:
 
@@ -104,9 +104,9 @@ By default, all argument values are represented in the same way as the standard 
 
 - For regular functions, the function name is displayed.
 - For classes, the class name is displayed.
-- For lambda functions, just the `λ` symbol is displayed, because there is no reliable way to display the source code of a lambda function in Python.
+- For lambda functions, the complete source code is displayed. However, if a single line of source code contains more than one lambda function, only the `λ` symbol is displayed (this is a technical limitation of source code reflection in Python).
 
-You can provide a custom `repr` function for each argument value; use the `serializer` parameter for this:
+You can provide a custom serialization function for each argument value; use the `serializer` parameter for this:
 
 ```python
 print(
