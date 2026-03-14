@@ -3,7 +3,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from printo.reprs import superrepr
 
 
-def descript_data_object(  # noqa: PLR0913
+def describe_data_object(  # noqa: PLR0913
     class_name: str,
     args: Union[Tuple[Any, ...], List[Any]],
     kwargs: Dict[str, Any],
@@ -50,3 +50,6 @@ def descript_data_object(  # noqa: PLR0913
     )
 
     return f'{class_name}({breackets_content})'
+
+
+descript_data_object = describe_data_object
