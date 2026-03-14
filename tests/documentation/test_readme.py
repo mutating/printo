@@ -28,7 +28,7 @@ def test_custom_serializator():
         'MyClassName',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
-        serializator=lambda x: repr(x * 2),
+        serializer=lambda x: repr(x * 2),
     ) == "MyClassName(2, 4, 'lollol', variable_name=2, second_variable_name='kekkek')"
 
 

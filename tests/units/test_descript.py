@@ -8,7 +8,7 @@ from printo import descript_data_object, not_none
 
 def test_empty_object():
     assert descript_data_object('ClassName', (), {}) == 'ClassName()'
-    assert descript_data_object('ClassName', (), {}, serializator=lambda x: 'kek') == 'ClassName()'  # noqa: ARG005
+    assert descript_data_object('ClassName', (), {}, serializer=lambda x: 'kek') == 'ClassName()'  # noqa: ARG005
 
 
 @pytest.mark.parametrize(
@@ -68,29 +68,29 @@ def test_args_and_kwargs():
 
 
 def test_set_serializator_for_args():
-    assert descript_data_object('ClassName', (1, 2, 3), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(11, 22, 33)'
-    assert descript_data_object('ClassName', (1, 2), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(11, 22)'
-    assert descript_data_object('ClassName', (1,), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(11)'
+    assert descript_data_object('ClassName', (1, 2, 3), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(11, 22, 33)'
+    assert descript_data_object('ClassName', (1, 2), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(11, 22)'
+    assert descript_data_object('ClassName', (1,), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(11)'
 
-    assert descript_data_object('ClassName', ('lol', 'kek'), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(lollol, kekkek)'
-    assert descript_data_object('ClassName', ('lol',), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(lollol)'
+    assert descript_data_object('ClassName', ('lol', 'kek'), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(lollol, kekkek)'
+    assert descript_data_object('ClassName', ('lol',), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(lollol)'
 
-    assert descript_data_object('ClassName', ('lol', 1, 2, 3), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(lollol, 11, 22, 33)'
-    assert descript_data_object('ClassName', ('lol', 1, 2, 3, 'kek'), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(lollol, 11, 22, 33, kekkek)'
-    assert descript_data_object('ClassName', ('lol', 1, 2, 3, 'kek', None), {}, serializator=lambda x: f'{x}{x}') == 'ClassName(lollol, 11, 22, 33, kekkek, NoneNone)'
+    assert descript_data_object('ClassName', ('lol', 1, 2, 3), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(lollol, 11, 22, 33)'
+    assert descript_data_object('ClassName', ('lol', 1, 2, 3, 'kek'), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(lollol, 11, 22, 33, kekkek)'
+    assert descript_data_object('ClassName', ('lol', 1, 2, 3, 'kek', None), {}, serializer=lambda x: f'{x}{x}') == 'ClassName(lollol, 11, 22, 33, kekkek, NoneNone)'
 
-    assert descript_data_object('ClassName', ('lol', 1, 2, 3, 'kek', None), {}, serializator=lambda x: f'{x}{x}', placeholders={1: 'kek'}) == 'ClassName(lollol, kek, 22, 33, kekkek, NoneNone)'
+    assert descript_data_object('ClassName', ('lol', 1, 2, 3, 'kek', None), {}, serializer=lambda x: f'{x}{x}', placeholders={1: 'kek'}) == 'ClassName(lollol, kek, 22, 33, kekkek, NoneNone)'
 
 
 def test_set_serializator_for_kwargs():
-    assert descript_data_object('ClassName', (), {'lol': 1, 'kek': 2}, serializator=lambda x: f'{x}{x}') == 'ClassName(lol=11, kek=22)'
+    assert descript_data_object('ClassName', (), {'lol': 1, 'kek': 2}, serializer=lambda x: f'{x}{x}') == 'ClassName(lol=11, kek=22)'
 
-    assert descript_data_object('ClassName', (), {'lol': 'insert text', 'kek': 'insert the second text'}, serializator=lambda x: f'{x}{x}') == 'ClassName(lol=insert textinsert text, kek=insert the second textinsert the second text)'
+    assert descript_data_object('ClassName', (), {'lol': 'insert text', 'kek': 'insert the second text'}, serializer=lambda x: f'{x}{x}') == 'ClassName(lol=insert textinsert text, kek=insert the second textinsert the second text)'
 
-    assert descript_data_object('ClassName', (), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text'}, serializator=lambda x: f'{x}{x}') == 'ClassName(number_1=11, number_2=22, lol=insert textinsert text, kek=insert the second textinsert the second text)'
-    assert descript_data_object('ClassName', (), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text', 'number_3': 3}, serializator=lambda x: f'{x}{x}') == 'ClassName(number_1=11, number_2=22, lol=insert textinsert text, kek=insert the second textinsert the second text, number_3=33)'
+    assert descript_data_object('ClassName', (), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text'}, serializer=lambda x: f'{x}{x}') == 'ClassName(number_1=11, number_2=22, lol=insert textinsert text, kek=insert the second textinsert the second text)'
+    assert descript_data_object('ClassName', (), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text', 'number_3': 3}, serializer=lambda x: f'{x}{x}') == 'ClassName(number_1=11, number_2=22, lol=insert textinsert text, kek=insert the second textinsert the second text, number_3=33)'
 
-    assert descript_data_object('ClassName', (), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text', 'number_3': 3}, serializator=lambda x: f'{x}{x}', placeholders={'lol': 'kek'}) == 'ClassName(number_1=11, number_2=22, lol=kek, kek=insert the second textinsert the second text, number_3=33)'
+    assert descript_data_object('ClassName', (), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text', 'number_3': 3}, serializer=lambda x: f'{x}{x}', placeholders={'lol': 'kek'}) == 'ClassName(number_1=11, number_2=22, lol=kek, kek=insert the second textinsert the second text, number_3=33)'
 
 
 def test_set_empty_filters_dict_for_args():
@@ -240,7 +240,7 @@ def test_simple_placeholders():
 
 def test_wrong_serializator_callback():
     with pytest.raises(SignatureMismatchError):
-        descript_data_object('ClassName', (1, 2, 3), {'lol': 'kek'}, serializator=lambda x, y: x + y)
+        descript_data_object('ClassName', (1, 2, 3), {'lol': 'kek'}, serializer=lambda x, y: x + y)
 
 
 def test_wrong_filter_callback():
