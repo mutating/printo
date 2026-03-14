@@ -1,7 +1,7 @@
 from inspect import isclass, isfunction
 from typing import Any
 
-from getsources import getclearsource, UncertaintyWithLambdasError
+from getsources import UncertaintyWithLambdasError, getclearsource
 
 
 def superrepr(value: Any) -> str:
