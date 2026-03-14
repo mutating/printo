@@ -12,7 +12,8 @@ description = 'Print objects with data beautifully'
 readme = 'README.md'
 requires-python = '>=3.8'
 dependencies = [
-    'sigmatch>=0.0.8'
+    'sigmatch>=0.0.8',
+    'getsources>=0.0.3',
 ]
 classifiers = [
     'Operating System :: OS Independent',
