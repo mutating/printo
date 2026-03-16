@@ -12,6 +12,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    overload,
 )
 
 from getsources import getclearsource
@@ -47,6 +48,15 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
             results[node.value.id] = node.targets[0].attr
 
     return results
+
+
+@overload
+def repred(cls: None = None, *, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Callable[[ClassType], ClassType]:
+    ...  # pragma: no cover
+
+@overload
+def repred(cls: ClassType, /) -> ClassType:
+    ...  # pragma: no cover
 
 def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915, PLR0913
     from sigmatch import (  # noqa: PLC0415
