@@ -1,7 +1,7 @@
 from ast import Assign, Attribute, Name, parse
 from functools import partial
 from inspect import Parameter, Signature, getattr_static, isclass, signature
-from typing import Any, Dict, Optional, Type, TypeVar, cast
+from typing import Any, Dict, Optional, Type, TypeVar, Callable, cast
 
 from getsources import getclearsource
 
@@ -27,18 +27,31 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
     return results
 
+def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None) -> ClassType:
+    if cls is None:
+        return partial(prefer_positional=prefer_positional, getters=getters)
 
-def repred(cls: ClassType) -> ClassType:
     if not isclass(cls):
         raise ValueError('The @repred decorator can only be applied to classes.')
     if '__repr__' in cls.__dict__:
         raise RedefinitionError(f'Class {cls.__name__} already has its own __repr__ method defined; you cannot override it.')
+    if getters is not None:
+        from sigmatch import PossibleCallMatcher, SignatureMismatchError  # noqa: PLC0415
+
+        matcher = PossibleCallMatcher('.')
+        for parameter_name, getter in getters.items():
+            if not matcher.match(getter):
+                raise SignatureMismatchError(f'You have defined a getter for parameter "{parameter_name}" that cannot be called with a single argument (an object of class {cls.__name__}).')
+
+        default_getters = getters
+    else:
+        default_getters = {}
 
     names_mapping = get_mapping(cls)
 
     positional_getters = {}
     keyword_getters = {}
-    defaults = {}
+    default_values = {}
     one_star_parameter = None
     two_stars_parameter = None
 
@@ -52,32 +65,37 @@ def repred(cls: ClassType) -> ClassType:
     for position, parameter in enumerate(parameters):
         if position:
             parameter_name = parameter.name
-            if parameter_name not in names_mapping and parameter.default == parameter.empty:
+            if parameter_name not in names_mapping and parameter_name not in default_getters and parameter.default == parameter.empty:
                 raise ParameterMappingNotFoundError()
 
             if parameter.kind == Parameter.POSITIONAL_ONLY:
                 positional_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
-            elif parameter.kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
+            elif parameter.kind == Parameter.KEYWORD_ONLY:
                 keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
+            elif parameter.kind == Parameter.POSITIONAL_OR_KEYWORD:
+                if prefer_positional:
+                    positional_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
+                else:
+                    keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
             elif parameter.kind == Parameter.VAR_POSITIONAL:
                 one_star_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
             elif parameter.kind == Parameter.VAR_KEYWORD:
                 two_stars_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
 
             if parameter.default != parameter.empty:
-                defaults[parameter_name] = parameter.default
+                default_values[parameter_name] = parameter.default
 
     def __repr__(self) -> str:  # noqa: N807
         positionals = []
         for name, getter in positional_getters.items():
-            value = getter(self)
-            if not (name in defaults and defaults[name] is value):
+            value = default_getters[name](self) if name in default_getters else getter(self)
+            if not (name in default_values and default_values[name] is value):
                 positionals.append(value)
 
         keywords = {}
         for name, getter in keyword_getters.items():
-            value = getter(self)
-            if name not in defaults or defaults[name] is not value:
+            value = default_getters[name](self) if name in default_getters else getter(self)
+            if name not in default_values or default_values[name] is not value:
                 keywords[name] = value
 
         if one_star_parameter is not None:
