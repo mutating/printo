@@ -30,7 +30,7 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
 def repred(cls: ClassType) -> ClassType:
     if not isclass(cls):
-        raise ValueError
+        raise ValueError('The @repred decorator can only be applied to classes.')
     if getattr_static(cls, '__repr__') is not object.__repr__:
         raise RedefinitionError(f'Class {cls.__name__} already has its own __repr__ method defined; you cannot override it.')
 
