@@ -59,7 +59,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
             if not isinstance(parameter_name_or_id, (int, str)) or (isinstance(parameter_name_or_id, int) and parameter_name_or_id < 0) or (isinstance(parameter_name_or_id, str) and not parameter_name_or_id.isidentifier()):
                 raise ValueError('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')
             if not matcher.match(filter_function):
-                raise SignatureMismatchError(f'')
+                raise SignatureMismatchError(f'You have defined a getter for parameter "{parameter_name_or_id}" that cannot be called with a single argument.')
     else:
         filters = {}
 
