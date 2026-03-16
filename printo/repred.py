@@ -62,7 +62,6 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
         for parameter_name, getter in getters.items():
             if not matcher.match(getter):
                 raise SignatureMismatchError(f'You have defined a getter for parameter "{parameter_name}" that cannot be called with a single argument (an object of class {cls.__name__}).')
-
         default_getters = getters
     else:
         default_getters = {}

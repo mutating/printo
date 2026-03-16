@@ -2,7 +2,7 @@ import pytest
 from full_match import match
 from sigmatch import SignatureMismatchError
 
-from printo import ParameterMappingNotFoundError, RedefinitionError, repred
+from printo import ParameterMappingNotFoundError, RedefinitionError, CanNotBePositionalError, repred
 
 
 def test_apply_decorator_to_wrong_object():
@@ -422,3 +422,29 @@ def test_conditional_expressions():
         class SomeClass:
             def __init__(self, a):
                 self.a = a if a else 123
+
+
+def test_set_wrong_positionals():
+    with pytest.raises(ValueError, match=match('You have specified the parameter name \'lol kek\' as a positional, which is not a valid identifier name in Python.')):
+        @repred(positionals=['lol kek'])
+        class SomeClass:
+            def __init__(self, a):
+                self.a = a
+
+    with pytest.raises(NameError, match=match('Parameter "lol" is not used when initializing objects of class SomeClass2, but you have defined it as a position one.')):
+        @repred(positionals=['lol'])
+        class SomeClass2:
+            def __init__(self, a):
+                self.a = a
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter a cannot be represented as a positional one.')):
+        @repred(positionals=['a'])
+        class SomeClass3:
+            def __init__(self, *, a):
+                self.a = a
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter a cannot be represented as a positional one.')):
+        @repred(positionals=['a'])
+        class SomeClass4:
+            def __init__(self, **a):
+                self.a = a
