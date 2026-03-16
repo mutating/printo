@@ -414,3 +414,11 @@ def test_simple_ignore():
     assert repr(Class3(a=1, b=2, c=3)) == 'Class3(a=1, b=2)'
 
     assert repr(Class4(a=1, b=2, c=3)) == 'Class4(b=2, c=3)'
+
+
+def test_conditional_expressions():
+    with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
+        @repred
+        class SomeClass:
+            def __init__(self, a):
+                self.a = a if a else 123
