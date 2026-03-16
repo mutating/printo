@@ -18,7 +18,7 @@
 ![logo](https://raw.githubusercontent.com/mutating/printo/develop/docs/assets/logo_1.svg)
 
 
-Pythonistas follow an implicit convention to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. With this library, you can easily implement `__repr__` for your own classes to follow this convention.
+Pythonistas follow an implicit convention to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. With this library, you can easily implement `__repr__` for your own classes.
 
 
 ## Table of contents
@@ -148,6 +148,8 @@ print(
 
 ## Auto mode
 
+> ⚠️ Auto mode is currently experimental, so there may be some bugs.
+
 You can remove the boilerplate code by using the `@repred` decorator for your class:
 
 ```python
@@ -170,7 +172,7 @@ print(SomeClass(1, 2, 3, 4, 5, d=lambda x: x))
 #> SomeClass(1, 2, 3, 4, 5, d=lambda x: x)
 ```
 
-How does it work? Behind the scenes, the decorator uses AST analysis to generate code. The program attempts to determine which arguments passed to `__init__` are stored in which attributes. In other words, it looks for direct assignments of the form `self.a = a` in the `__init__` method.
+How does it work? Behind the scenes, the decorator uses AST analysis to generate code. The decorator attempts to determine which arguments passed to `__init__` are stored in which attributes. In other words, it looks for direct assignments of the form `self.a = a` in the `__init__` method.
 
 If there is no *direct assignment* of a specific argument, an exception will be raised:
 
@@ -222,6 +224,19 @@ print(Class2(123, 456))
 #> Class2(123, 456)
 ```
 
+You can also choose to display only certain parameters as positional:
+
+```python
+@repred(positionals=['a'])
+class SomeClass:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+print(SomeClass(123, 456))
+#> SomeClass(123, b=456)
+```
+
 If you want to prevent certain `__init__` parameters from being displayed, you can add their names to the ignore list:
 
 ```python
@@ -266,5 +281,3 @@ def function():
 print(function()(123, 456))
 #> function.<locals>.SomeClass(a=123, b=456)
 ```
-
-> ⚠️ Auto mode is currently experimental, so there may be some bugs.

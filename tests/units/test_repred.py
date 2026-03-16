@@ -2,7 +2,12 @@ import pytest
 from full_match import match
 from sigmatch import SignatureMismatchError
 
-from printo import ParameterMappingNotFoundError, RedefinitionError, repred
+from printo import (
+    CanNotBePositionalError,
+    ParameterMappingNotFoundError,
+    RedefinitionError,
+    repred,
+)
 
 
 def test_apply_decorator_to_wrong_object():
@@ -422,3 +427,91 @@ def test_conditional_expressions():
         class SomeClass:
             def __init__(self, a):
                 self.a = a if a else 123
+
+
+def test_set_wrong_positionals():
+    with pytest.raises(ValueError, match=match('You have specified the parameter name \'lol kek\' as a positional, which is not a valid identifier name in Python.')):
+        @repred(positionals=['lol kek'])
+        class SomeClass:
+            def __init__(self, a):
+                self.a = a
+
+    with pytest.raises(NameError, match=match('Parameter "lol" is not used when initializing objects of class SomeClass2, but you have defined it as a position one.')):
+        @repred(positionals=['lol'])
+        class SomeClass2:
+            def __init__(self, a):
+                self.a = a
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter a cannot be represented as a positional one.')):
+        @repred(positionals=['a'])
+        class SomeClass3:
+            def __init__(self, *, a):
+                self.a = a
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter a cannot be represented as a positional one.')):
+        @repred(positionals=['a'])
+        class SomeClass4:
+            def __init__(self, **a):
+                self.a = a
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter b cannot be represented as a positional one.')):
+        @repred(positionals=['b', 'c'])
+        class SomeClass5:
+            def __init__(self, a, b, c=None):
+                self.a = a
+                self.b = b
+                self.c = c
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter c cannot be represented as a positional one.')):
+        @repred(positionals=['c'])
+        class SomeClass5:
+            def __init__(self, a, b, c=None):
+                self.a = a
+                self.b = b
+                self.c = c
+
+
+def test_positionals():
+    @repred(positionals=['a'])
+    class Class1:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(positionals=['a', 'b'])
+    class Class2:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(positionals=['a', 'b', 'c'])
+    class Class3:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(positionals=['b', 'c'], prefer_positional=True)
+    class Class4:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    assert repr(Class1(1, 2)) == 'Class1(1, b=2)'
+    assert repr(Class1(1, 2, 3)) == 'Class1(1, b=2, c=3)'
+    assert repr(Class1(1, 2, c=3)) == 'Class1(1, b=2, c=3)'
+
+    assert repr(Class2(1, 2)) == 'Class2(1, 2)'
+    assert repr(Class2(1, 2, 3)) == 'Class2(1, 2, c=3)'
+    assert repr(Class2(1, 2, c=3)) == 'Class2(1, 2, c=3)'
+
+    assert repr(Class3(1, 2)) == 'Class3(1, 2)'
+    assert repr(Class3(1, 2, 3)) == 'Class3(1, 2, 3)'
+    assert repr(Class3(1, 2, c=3)) == 'Class3(1, 2, 3)'
+
+    assert repr(Class4(1, 2)) == 'Class4(1, 2)'
+    assert repr(Class4(1, 2, 3)) == 'Class4(1, 2, 3)'
+    assert repr(Class4(1, 2, c=3)) == 'Class4(1, 2, 3)'

@@ -17,7 +17,11 @@ from typing import (
 from getsources import getclearsource
 
 from printo import describe_data_object
-from printo.errors import ParameterMappingNotFoundError, RedefinitionError
+from printo.errors import (
+    CanNotBePositionalError,
+    ParameterMappingNotFoundError,
+    RedefinitionError,
+)
 
 ClassType = TypeVar('ClassType', bound=Type[Any])
 
@@ -44,14 +48,14 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
     return results
 
-def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915, PLR0913
+def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915, PLR0913
     from sigmatch import (  # noqa: PLC0415
         PossibleCallMatcher,
         SignatureMismatchError,
     )
 
     if cls is None:
-        return partial(repred, prefer_positional=prefer_positional, qualname=qualname, getters=getters, filters=filters, ignore=ignore)  # type: ignore[return-value]
+        return partial(repred, prefer_positional=prefer_positional, qualname=qualname, getters=getters, filters=filters, ignore=ignore, positionals=positionals)  # type: ignore[return-value]
 
     if not isclass(cls):
         raise ValueError('The @repred decorator can only be applied to classes.')
@@ -62,7 +66,6 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
         for parameter_name, getter in getters.items():
             if not matcher.match(getter):
                 raise SignatureMismatchError(f'You have defined a getter for parameter "{parameter_name}" that cannot be called with a single argument (an object of class {cls.__name__}).')
-
         default_getters = getters
     else:
         default_getters = {}
@@ -84,6 +87,14 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     else:
         ignore = []
     ignored_parameters = set(ignore)
+
+    if positionals:
+        for parameter_name in positionals:
+            if not parameter_name.isidentifier():
+                raise ValueError(f'You have specified the parameter name {parameter_name!r} as a positional, which is not a valid identifier name in Python.')
+    else:
+        positionals = []
+    positionals_to_compare = set(positionals)
 
     names_mapping = get_mapping(cls)
 
@@ -108,7 +119,11 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
             if parameter.kind == Parameter.VAR_POSITIONAL:
                 one_star_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
             elif parameter.kind == Parameter.VAR_KEYWORD:
+                if parameter_name in positionals_to_compare:
+                    raise CanNotBePositionalError(f'Parameter {parameter_name} cannot be represented as a positional one.')
                 two_stars_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
+
+    counted_as_keywords = 0
 
     for position, parameter in enumerate(parameters):
         if position:
@@ -123,11 +138,16 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
                 if parameter.kind == Parameter.POSITIONAL_ONLY:
                     positional_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
                 elif parameter.kind == Parameter.KEYWORD_ONLY:
+                    if parameter_name in positionals_to_compare:
+                        raise CanNotBePositionalError(f'Parameter {parameter_name} cannot be represented as a positional one.')
                     keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
                 elif parameter.kind == Parameter.POSITIONAL_OR_KEYWORD:
-                    if prefer_positional or one_star_parameter is not None:
+                    if parameter_name in positionals_to_compare and counted_as_keywords:
+                        raise CanNotBePositionalError(f'Parameter {parameter_name} cannot be represented as a positional one.')
+                    if prefer_positional or one_star_parameter is not None or parameter_name in positionals_to_compare:
                         positional_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
                     else:
+                        counted_as_keywords += 1
                         keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
 
                 if parameter.default != parameter.empty:
@@ -140,6 +160,10 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     for parameter_name in ignored_parameters:
         if parameter_name not in all_parameter_names:
             raise NameError(f'Parameter "{parameter_name}" is not used when initializing objects of class {cls.__name__}, but you have defined it as an ignored one.')
+
+    for parameter_name in positionals_to_compare:
+        if parameter_name not in all_parameter_names:
+            raise NameError(f'Parameter "{parameter_name}" is not used when initializing objects of class {cls.__name__}, but you have defined it as a position one.')
 
     if parameters_not_found:
         raise ParameterMappingNotFoundError(f'No internal object {"properties" if len(parameters_not_found) > 1 else "property"} or custom {"getters" if len(parameters_not_found) > 1 else "getter"} {"were" if len(parameters_not_found) > 1 else "was"} found for the {"parameters" if len(parameters_not_found) > 1 else "parameter"} {", ".join(parameters_not_found)}.')
@@ -163,7 +187,6 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
             keywords.update(two_stars_parameter(self))
 
         class_name = cls.__qualname__ if qualname else cls.__name__
-
 
         return describe_data_object(
             class_name,
