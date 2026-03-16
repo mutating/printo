@@ -1,7 +1,7 @@
 from ast import Assign, Attribute, Name, parse
 from functools import partial
 from inspect import Parameter, Signature, getattr_static, isclass, signature
-from typing import Any, Dict, Optional, Type, TypeVar, Callable, cast
+from typing import Any, Callable, Dict, Optional, Type, TypeVar, cast
 
 from getsources import getclearsource
 
@@ -39,7 +39,10 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
     if '__repr__' in cls.__dict__:
         raise RedefinitionError(f'Class {cls.__name__} already has its own __repr__ method defined; you cannot override it.')
     if getters is not None:
-        from sigmatch import PossibleCallMatcher, SignatureMismatchError  # noqa: PLC0415
+        from sigmatch import (  # noqa: PLC0415
+            PossibleCallMatcher,
+            SignatureMismatchError,
+        )
 
         matcher = PossibleCallMatcher('.')
         for parameter_name, getter in getters.items():

@@ -4,6 +4,6 @@ from printo.describe import (
 from printo.describe import (
     descript_data_object as descript_data_object,
 )
+from printo.errors import ParameterMappingNotFoundError, RedefinitionError
 from printo.filters import not_none as not_none
 from printo.repred import repred as repred
-from printo.errors import RedefinitionError, ParameterMappingNotFoundError
