@@ -30,20 +30,20 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
     return results
 
-def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915
+def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915
+    from sigmatch import (  # noqa: PLC0415
+        PossibleCallMatcher,
+        SignatureMismatchError,
+    )
+
     if cls is None:
-        return partial(repred, prefer_positional=prefer_positional, getters=getters)  # type: ignore[return-value]
+        return partial(repred, prefer_positional=prefer_positional, qualname=qualname, getters=getters, filters=filters)  # type: ignore[return-value]
 
     if not isclass(cls):
         raise ValueError('The @repred decorator can only be applied to classes.')
     if '__repr__' in cls.__dict__:
         raise RedefinitionError(f'Class {cls.__name__} already has its own __repr__ method defined; you cannot override it.')
     if getters is not None:
-        from sigmatch import (  # noqa: PLC0415
-            PossibleCallMatcher,
-            SignatureMismatchError,
-        )
-
         matcher = PossibleCallMatcher('.')
         for parameter_name, getter in getters.items():
             if not matcher.match(getter):
@@ -52,6 +52,16 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
         default_getters = getters
     else:
         default_getters = {}
+
+    if filters is not None:
+        matcher = PossibleCallMatcher('.')
+        for parameter_name_or_id, filter_function in filters.items():
+            if not isinstance(parameter_name_or_id, (int, str)) or (isinstance(parameter_name_or_id, int) and parameter_name_or_id < 0) or (isinstance(parameter_name_or_id, str) and not parameter_name_or_id.isidentifier()):
+                raise ValueError('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')
+            if not matcher.match(filter_function):
+                raise SignatureMismatchError(f'')
+    else:
+        filters = {}
 
     names_mapping = get_mapping(cls)
 
@@ -125,10 +135,14 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
         if two_stars_parameter is not None:
             keywords.update(two_stars_parameter(self))
 
+        class_name = cls.__qualname__ if qualname else cls.__name__
+
+
         return describe_data_object(
-            cls.__name__,
+            class_name,
             positionals,
             keywords,
+            filters=filters,
         )
 
     cls.__repr__ = __repr__  # type: ignore[assignment]
