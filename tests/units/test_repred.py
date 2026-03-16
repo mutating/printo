@@ -2,7 +2,12 @@ import pytest
 from full_match import match
 from sigmatch import SignatureMismatchError
 
-from printo import ParameterMappingNotFoundError, RedefinitionError, CanNotBePositionalError, repred
+from printo import (
+    CanNotBePositionalError,
+    ParameterMappingNotFoundError,
+    RedefinitionError,
+    repred,
+)
 
 
 def test_apply_decorator_to_wrong_object():

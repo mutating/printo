@@ -17,7 +17,11 @@ from typing import (
 from getsources import getclearsource
 
 from printo import describe_data_object
-from printo.errors import ParameterMappingNotFoundError, RedefinitionError, CanNotBePositionalError
+from printo.errors import (
+    CanNotBePositionalError,
+    ParameterMappingNotFoundError,
+    RedefinitionError,
+)
 
 ClassType = TypeVar('ClassType', bound=Type[Any])
 
