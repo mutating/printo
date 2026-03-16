@@ -95,7 +95,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
             raise NameError(f'Parameter "{parameter_name}" is not used when initializing objects of class {cls.__name__}, but you have defined a getter for it.')
 
     if parameters_not_found:
-        raise ParameterMappingNotFoundError(f'No internal object properties or custom getters were found for the parameters {", ".join(parameters_not_found)}')
+        raise ParameterMappingNotFoundError(f'No internal object {"properties" if len(parameters_not_found) > 1 else "property"} or custom {"getters" if len(parameters_not_found) > 1 else "getter"} were found for the {"parameters" if len(parameters_not_found) > 1 else "parameter"} {", ".join(parameters_not_found)}.')
 
     def __repr__(self) -> str:  # noqa: N807
         positionals = []
