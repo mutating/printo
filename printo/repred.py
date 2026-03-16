@@ -1,7 +1,18 @@
 from ast import Assign, Attribute, Name, parse
 from functools import partial
 from inspect import Parameter, Signature, getattr_static, isclass, signature
-from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar, Union, List, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+    cast,
+)
 
 from getsources import getclearsource
 
@@ -33,7 +44,7 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
     return results
 
-def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915
+def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915, PLR0913
     from sigmatch import (  # noqa: PLC0415
         PossibleCallMatcher,
         SignatureMismatchError,
@@ -69,7 +80,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     if ignore is not None:
         for parameter_name in ignore:
             if not parameter_name.isidentifier():
-                raise ValueError()
+                raise ValueError
     else:
         ignore = []
     ignored_parameters = set(ignore)
