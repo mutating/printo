@@ -51,7 +51,7 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
 
 @overload
-def repred(cls: None = None, *, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Callable[[ClassType], ClassType]:
+def repred(*, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Callable[[ClassType], ClassType]:
     ...  # pragma: no cover
 
 @overload
