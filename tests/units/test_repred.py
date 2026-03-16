@@ -315,3 +315,23 @@ def test_set_filters():
             self.x = args
 
     assert repr(Class3(0, 0, 0)) == 'Class3(0, 0)'
+
+
+def test_qualname():
+    @repred(qualname=True)
+    class Class1:
+        def __init__(self):
+            ...
+
+    @repred(qualname=True)
+    class Class2:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    assert repr(Class1()) == 'test_qualname.<locals>.Class1()'
+
+    assert repr(Class2(1, 2)) == 'test_qualname.<locals>.Class2(a=1, b=2)'
+    assert repr(Class2(1, 2, 3)) == 'test_qualname.<locals>.Class2(a=1, b=2, c=3)'
+    assert repr(Class2(1, 2, c=3)) == 'test_qualname.<locals>.Class2(a=1, b=2, c=3)'
