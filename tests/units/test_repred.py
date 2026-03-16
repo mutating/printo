@@ -365,3 +365,17 @@ def test_init_without_self():
         class SomeClass:
             def __init__():
                 ...
+
+
+def test_ignore_wrong_identificator():
+    with pytest.raises(ValueError, match=match('You have specified the parameter name \'lol kek\' to ignore, which is not a valid identifier name in Python.')):
+        @repred(ignore=['lol kek'])
+        class SomeClass:
+            def __init__(self):
+                ...
+
+    with pytest.raises(NameError, match=match('Parameter "lol" is not used when initializing objects of class SomeClass2, but you have defined it as an ignored one.')):
+        @repred(ignore=['lol'])
+        class SomeClass2:
+            def __init__(self):
+                ...
