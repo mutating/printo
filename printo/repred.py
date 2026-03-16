@@ -119,6 +119,8 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
                     raise CanNotBePositionalError(f'Parameter {parameter_name} cannot be represented as a positional one.')
                 two_stars_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
 
+    counted_as_keywords = 0
+
     for position, parameter in enumerate(parameters):
         if position:
             parameter_name = parameter.name
@@ -136,9 +138,12 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
                         raise CanNotBePositionalError(f'Parameter {parameter_name} cannot be represented as a positional one.')
                     keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
                 elif parameter.kind == Parameter.POSITIONAL_OR_KEYWORD:
+                    if parameter_name in positionals_to_compare and counted_as_keywords:
+                        raise CanNotBePositionalError(f'Parameter {parameter_name} cannot be represented as a positional one.')
                     if prefer_positional or one_star_parameter is not None or parameter_name in positionals_to_compare:
                         positional_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
                     else:
+                        counted_as_keywords += 1
                         keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
 
                 if parameter.default != parameter.empty:
