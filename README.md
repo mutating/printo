@@ -170,7 +170,7 @@ print(SomeClass(1, 2, 3, 4, 5, d=lambda x: x))
 #> SomeClass(1, 2, 3, 4, 5, d=lambda x: x)
 ```
 
-How does it work? Behind the scenes, the decorator uses AST analysis to generate code. The program attempts to determine which arguments passed to `__init__` are stored in which attributes. In other words, it looks for direct assignments of the form `self.a = a` in the `__init__` method.
+How does it work? Behind the scenes, the decorator uses AST analysis to generate code. The decorator attempts to determine which arguments passed to `__init__` are stored in which attributes. In other words, it looks for direct assignments of the form `self.a = a` in the `__init__` method.
 
 If there is no *direct assignment* of a specific argument, an exception will be raised:
 
@@ -220,6 +220,19 @@ print(Class1(123, 456))
 #> Class1(a=123, b=456)
 print(Class2(123, 456))
 #> Class2(123, 456)
+```
+
+You can also choose to display only certain parameters as positional:
+
+```python
+@repred(positionals=['a'])
+class SomeClass:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+print(SomeClass(123, 456))
+#> SomeClass(123, b=456)
 ```
 
 If you want to prevent certain `__init__` parameters from being displayed, you can add their names to the ignore list:
