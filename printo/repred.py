@@ -29,7 +29,7 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
 def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None) -> ClassType:
     if cls is None:
-        return partial(prefer_positional=prefer_positional, getters=getters)
+        return partial(repred, prefer_positional=prefer_positional, getters=getters)
 
     if not isclass(cls):
         raise ValueError('The @repred decorator can only be applied to classes.')
