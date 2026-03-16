@@ -273,3 +273,45 @@ def test_star_kwargs():
     assert repr(Class3(1, 2, 3)) == 'Class3(1, 2, 3)'
     assert repr(Class3(1, 2, c=3)) == 'Class3(1, 2, 3)'
     assert repr(Class3(1, 2, 3, d=4, e=5)) == 'Class3(1, 2, 3, d=4, e=5)'
+
+
+def test_set_filters():
+    @repred(filters={'x': lambda x: x})
+    class Class1:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+    assert repr(Class1(0, 0)) == 'Class1(y=0)'
+
+    @repred(
+        filters={1: lambda x: x},
+        prefer_positional=True,
+    )
+    class Class2:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+
+    assert repr(Class2(0, 0)) == 'Class2(0)'
+
+    @repred(
+        filters={0: lambda x: x},
+        prefer_positional=True,
+    )
+    class Class3:
+        def __init__(self, *args):
+            self.x = args
+
+    assert repr(Class3(0, 0, 0)) == 'Class3(0, 0)'
+
+    @repred(
+        filters={0: lambda x: x},
+        prefer_positional=True,
+    )
+    class Class4:
+        def __init__(self, *args):
+            self.x = args
+
+    assert repr(Class3(0, 0, 0)) == 'Class3(0, 0)'
