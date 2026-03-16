@@ -1,7 +1,7 @@
 from ast import Assign, Attribute, Name, parse
 from functools import partial
 from inspect import Parameter, Signature, getattr_static, isclass, signature
-from typing import Any, Callable, Dict, Optional, Type, TypeVar, cast, Union, Iterable
+from typing import Any, Callable, Dict, Iterable, Optional, Type, TypeVar, Union, cast
 
 from getsources import getclearsource
 
@@ -30,7 +30,7 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
     return results
 
-def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:
+def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915
     if cls is None:
         return partial(repred, prefer_positional=prefer_positional, getters=getters)  # type: ignore[return-value]
 
@@ -100,7 +100,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
             if parameter.default != parameter.empty:
                 default_values[parameter_name] = parameter.default
 
-    for parameter_name in default_getters.keys():
+    for parameter_name in default_getters:
         if parameter_name not in all_parameter_names:
             raise NameError(f'Parameter "{parameter_name}" is not used when initializing objects of class {cls.__name__}, but you have defined a getter for it.')
 
