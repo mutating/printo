@@ -6,5 +6,6 @@ from printo.describe import (
 )
 from printo.errors import ParameterMappingNotFoundError as ParameterMappingNotFoundError
 from printo.errors import RedefinitionError as RedefinitionError
+from printo.errors import CanNotBePositionalError as CanNotBePositionalError
 from printo.filters import not_none as not_none
 from printo.repred import repred as repred
