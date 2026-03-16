@@ -28,6 +28,7 @@ Pythonistas follow an implicit convention to create special [`__repr__`](https:/
 - [**Filtering**](#filtering)
 - [**Custom display of objects**](#custom-display-of-objects)
 - [**Placeholders**](#placeholders)
+- [**Auto mode**](#auto-mode)
 
 
 ## Installation
@@ -143,3 +144,80 @@ print(
 ```
 
 > 🤓 If you set a placeholder for a parameter, the [custom serializer](#custom-display-of-objects) will not be applied to it.
+
+
+## Auto mode
+
+You can remove the boilerplate code by using the `@repred` decorator for your class:
+
+```python
+from printo import repred
+
+@repred
+class SomeClass:
+    def __init__(self, a, b, c, *args, **kwargs):
+        self.a = a
+        self.b = b
+        self.c = c
+        self.args = args
+        self.kwargs = kwargs
+
+print(SomeClass(1, 2, 3))
+#> SomeClass(1, 2, 3)
+print(SomeClass(1, 2, 3, 4, 5))
+#> SomeClass(1, 2, 3, 4, 5)
+print(SomeClass(1, 2, 3, 4, 5, d=lambda x: x))
+#> SomeClass(1, 2, 3, 4, 5, d=lambda x: x)
+```
+
+How does it work? Code generation based on AST analysis takes place behind the scenes. The program attempts to determine which arguments passed during object initialization were stored in which object attributes. In other words, it looks for direct assignments of the form `self.a = a` in the `__init__` method.
+
+If there is no *direct assignment* of a specific argument, an exception will be raised:
+
+```python
+@repred
+class SomeClass:
+    def __init__(self, a):
+      ...
+
+#> ...
+#> printo.errors.ParameterMappingNotFoundError: No internal object property or custom getter were found for the parameter a.
+```
+
+If, for some reason, you are unable to specify this mapping in the body of the `__init__` method, you can pass a function for a specific parameter that will extract it:
+
+```python
+@repred(getters={'a': lambda x: x.a})
+class SomeClass:
+    def __init__(self, a):
+        self.a = self.convert_a(a)
+
+    def convert_a(self, a):
+        return a
+
+print(SomeClass(123))
+#> SomeClass(a=123)
+```
+
+By default, `@repred` displays all arguments as keywords in most cases. However, you can pass the `prefer_positional` argument to the decorator, which will cause it to prefer omitting argument names in such cases:
+
+```python
+@repred
+class Class1:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+@repred(prefer_positional=True)
+class Class2:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+print(Class1(123, 456))
+#> Class1(a=123, b=456)
+print(Class2(123, 456))
+#> Class2(123, 456)
+```
+
+> ⚠️ Automatic mode is currently being tested, so there may be some bugs.
