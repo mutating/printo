@@ -51,7 +51,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     )
 
     if cls is None:
-        return partial(repred, prefer_positional=prefer_positional, qualname=qualname, getters=getters, filters=filters, ignore=ignore)  # type: ignore[return-value]
+        return partial(repred, prefer_positional=prefer_positional, qualname=qualname, getters=getters, filters=filters, ignore=ignore, positionals=positionals)  # type: ignore[return-value]
 
     if not isclass(cls):
         raise ValueError('The @repred decorator can only be applied to classes.')
