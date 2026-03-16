@@ -89,9 +89,9 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
             if parameter.default != parameter.empty:
                 default_values[parameter_name] = parameter.default
 
-        for parameter_name, getter in default_getters.items():
-            if parameter_name not in all_parameter_names:
-                raise NameError(f'Parameter "{parameter_name}" is not used when initializing objects of class {cls.__name__}, but you have defined a getter for it.')
+    for parameter_name in default_getters.keys():
+        if parameter_name not in all_parameter_names:
+            raise NameError(f'Parameter "{parameter_name}" is not used when initializing objects of class {cls.__name__}, but you have defined a getter for it.')
 
     def __repr__(self) -> str:  # noqa: N807
         positionals = []
