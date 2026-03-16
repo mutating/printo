@@ -1,12 +1,12 @@
-from typing import Type, Any, TypeVar, Dict, Optional, cast
-from inspect import getattr_static, isclass, signature, Signature, Parameter
-from ast import parse, walk, Assign, Attribute, Name
+from ast import Assign, Attribute, Name, parse
 from functools import partial
+from inspect import Parameter, Signature, getattr_static, isclass, signature
+from typing import Any, Dict, Optional, Type, TypeVar, cast
 
-from printo.errors import RedefinitionError, ParameterMappingNotFoundError
-from printo import describe_data_object
 from getsources import getclearsource
 
+from printo import describe_data_object
+from printo.errors import ParameterMappingNotFoundError, RedefinitionError
 
 ClassType = TypeVar('ClassType', bound=Type[Any])
 
@@ -30,7 +30,7 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
 def repred(cls: ClassType) -> ClassType:
     if not isclass(cls):
-        raise ValueError()
+        raise ValueError
     if getattr_static(cls, '__repr__') is not object.__repr__:
         raise RedefinitionError(f'Class {cls.__name__} already has its own __repr__ method defined; you cannot override it.')
 
@@ -52,7 +52,7 @@ def repred(cls: ClassType) -> ClassType:
 
             if parameter.kind == Parameter.POSITIONAL_ONLY:
                 positional_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
-            elif parameter.kind == Parameter.POSITIONAL_OR_KEYWORD or parameter.kind == Parameter.KEYWORD_ONLY:
+            elif parameter.kind in (Parameter.POSITIONAL_OR_KEYWORD, Parameter.KEYWORD_ONLY):
                 keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
             elif parameter.kind == Parameter.VAR_POSITIONAL:
                 one_star_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
@@ -62,7 +62,7 @@ def repred(cls: ClassType) -> ClassType:
             if parameter.default != parameter.empty:
                 defaults[parameter_name] = parameter.default
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # noqa: N807
         positionals = []
         for name, getter in positional_getters.items():
             value = getter(self)

@@ -5,4 +5,4 @@ from printo.describe import (
     descript_data_object as descript_data_object,
 )
 from printo.filters import not_none as not_none
-from printo.repred import repred
+from printo.repred import repred as repred
