@@ -1,7 +1,7 @@
 from ast import Assign, Attribute, Name, parse
 from functools import partial
 from inspect import Parameter, Signature, getattr_static, isclass, signature
-from typing import Any, Callable, Dict, Optional, Type, TypeVar, cast
+from typing import Any, Callable, Dict, Optional, Type, TypeVar, cast, Union, Iterable
 
 from getsources import getclearsource
 
@@ -19,20 +19,20 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
     tree = parse(source)
 
     try:
-        self_name = tree.body[0].args.posonlyargs[0].arg
+        self_name = tree.body[0].args.posonlyargs[0].arg  # type: ignore[attr-defined]
     except IndexError:
-        self_name = tree.body[0].args.args[0].arg
+        self_name = tree.body[0].args.args[0].arg  # type: ignore[attr-defined]
 
     results = {}
-    for node in tree.body[0].body:
+    for node in tree.body[0].body:  # type: ignore[attr-defined]
         if isinstance(node, Assign) and len(node.targets) == 1 and isinstance(node.targets[0], Attribute) and isinstance(node.targets[0].value, Name) and node.targets[0].value.id == self_name and isinstance(node.value, Name):
             results[node.value.id] = node.targets[0].attr
 
     return results
 
-def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None) -> ClassType:
+def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:
     if cls is None:
-        return partial(repred, prefer_positional=prefer_positional, getters=getters)
+        return partial(repred, prefer_positional=prefer_positional, getters=getters)  # type: ignore[return-value]
 
     if not isclass(cls):
         raise ValueError('The @repred decorator can only be applied to classes.')
@@ -66,7 +66,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
     init_signature: Optional[Signature] = signature(cls.__init__)
 
     if getattr_static(cls, '__init__') is not object.__init__:
-        parameters = cast(Signature, init_signature).parameters.values()
+        parameters: Iterable[Parameter] = cast(Signature, init_signature).parameters.values()
     else:
         parameters = []
 
@@ -107,7 +107,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
     if parameters_not_found:
         raise ParameterMappingNotFoundError(f'No internal object {"properties" if len(parameters_not_found) > 1 else "property"} or custom {"getters" if len(parameters_not_found) > 1 else "getter"} were found for the {"parameters" if len(parameters_not_found) > 1 else "parameter"} {", ".join(parameters_not_found)}.')
 
-    def __repr__(self) -> str:  # noqa: N807
+    def __repr__(self: ClassType) -> str:  # noqa: N807
         positionals = []
         for name, getter in positional_getters.items():
             value = default_getters[name](self) if name in default_getters else getter(self)
@@ -131,6 +131,6 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
             keywords,
         )
 
-    cls.__repr__ = __repr__
+    cls.__repr__ = __repr__  # type: ignore[assignment]
 
     return cls
