@@ -267,4 +267,4 @@ print(function()(123, 456))
 #> function.<locals>.SomeClass(a=123, b=456)
 ```
 
-> ⚠️ Automatic mode is currently experimental, so there may be some bugs.
+> ⚠️ Auto mode is currently experimental, so there may be some bugs.
