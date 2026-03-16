@@ -222,4 +222,49 @@ print(Class2(123, 456))
 #> Class2(123, 456)
 ```
 
+If you want to prevent certain `__init__` parameters from being displayed, you can add their names to the ignore list:
+
+```python
+@repred(ignore=['a'])
+class SomeClass:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+print(SomeClass(123, 456))
+#> SomeClass(b=456)
+```
+
+You can also add value-based filters for individual arguments by passing a `dict` of filters, similar to how it works in [manual mode](#filtering):
+
+```python
+from printo import not_none
+
+@repred(filters={'a': not_none})
+class SomeClass:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+print(SomeClass(None, None))
+#> SomeClass(b=None)
+print(SomeClass(123, 456))
+#> SomeClass(a=123, b=456)
+```
+
+By default, the class name is displayed based on its `__name__` attribute, but you can configure it to use the `__qualname__` attribute instead:
+
+```python
+# Imagine that this code is in module some.path.to 
+
+@repred(qualname=True)
+class SomeClass:
+    def __init__(self, a, b):
+        self.a = a
+        self.b = b
+
+print(SomeClass(123, 456))
+#> some.path.to.SomeClass(a=123, b=456)
+```
+
 > ⚠️ Automatic mode is currently experimental, so there may be some bugs.
