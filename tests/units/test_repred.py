@@ -335,3 +335,25 @@ def test_qualname():
     assert repr(Class2(1, 2)) == 'test_qualname.<locals>.Class2(a=1, b=2)'
     assert repr(Class2(1, 2, 3)) == 'test_qualname.<locals>.Class2(a=1, b=2, c=3)'
     assert repr(Class2(1, 2, c=3)) == 'test_qualname.<locals>.Class2(a=1, b=2, c=3)'
+
+
+def test_wrong_filters():
+    with pytest.raises(ValueError, match=match('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')):
+        @repred(filters={...: lambda x: x})
+        class SomeClass1: ...
+
+    with pytest.raises(ValueError, match=match('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')):
+        @repred(filters={-1: lambda x: x})
+        class SomeClass2: ...
+
+    with pytest.raises(ValueError, match=match('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')):
+        @repred(filters={'lol kek': lambda x: x})
+        class SomeClass3: ...
+
+    with pytest.raises(SignatureMismatchError, match=match('You have defined a getter for parameter "name" that cannot be called with a single argument.')):
+        @repred(filters={'name': lambda: False})
+        class SomeClass4: ...
+
+    with pytest.raises(SignatureMismatchError, match=match('You have defined a getter for parameter "0" that cannot be called with a single argument.')):
+        @repred(filters={0: lambda: False})
+        class SomeClass5: ...
