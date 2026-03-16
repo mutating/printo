@@ -54,6 +54,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
     default_values = {}
     one_star_parameter = None
     two_stars_parameter = None
+    all_parameter_names = set()
 
     init_signature: Optional[Signature] = signature(cls.__init__)
 
@@ -65,6 +66,9 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
     for position, parameter in enumerate(parameters):
         if position:
             parameter_name = parameter.name
+
+            all_parameter_names.add(parameter_name)
+
             if parameter_name not in names_mapping and parameter_name not in default_getters and parameter.default == parameter.empty:
                 raise ParameterMappingNotFoundError()
 
@@ -84,6 +88,10 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
 
             if parameter.default != parameter.empty:
                 default_values[parameter_name] = parameter.default
+
+        for parameter_name, getter in default_getters.items():
+            if parameter_name not in all_parameter_names:
+                raise NameError(f'Parameter "{parameter_name}" is not used when initializing objects of class {cls.__name__}, but you have defined a getter for it.')
 
     def __repr__(self) -> str:  # noqa: N807
         positionals = []
