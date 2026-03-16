@@ -379,3 +379,38 @@ def test_ignore_wrong_identificator():
         class SomeClass2:
             def __init__(self):
                 ...
+
+
+def test_simple_ignore():
+    @repred(ignore=['args'])
+    class Class1:
+        def __init__(self, *args):
+            self.args = args
+
+    @repred(ignore=['kwargs'])
+    class Class2:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    @repred(ignore=['c'])
+    class Class3:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(ignore=['a'])
+    class Class4:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    assert repr(Class1()) == 'Class1()'
+    assert repr(Class1(1, 2, 3)) == 'Class1()'
+
+    assert repr(Class2(a=1, b=2, c=3)) == 'Class2()'
+
+    assert repr(Class3(a=1, b=2, c=3)) == 'Class3(a=1, b=2)'
+
+    assert repr(Class4(a=1, b=2, c=3)) == 'Class4(b=2, c=3)'
