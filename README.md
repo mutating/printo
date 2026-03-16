@@ -18,7 +18,7 @@
 ![logo](https://raw.githubusercontent.com/mutating/printo/develop/docs/assets/logo_1.svg)
 
 
-Pythonistas follow an implicit convention to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. With this library, you can easily implement `__repr__` for your own classes to follow this convention.
+Pythonistas follow an implicit convention to create special [`__repr__`](https://docs.python.org/3/reference/datamodel.html#object.__repr__) methods that return text closely resembling the code used to construct the object. With this library, you can easily implement `__repr__` for your own classes.
 
 
 ## Table of contents
