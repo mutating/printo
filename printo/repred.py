@@ -180,7 +180,6 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
 
         class_name = cls.__qualname__ if qualname else cls.__name__
 
-
         return describe_data_object(
             class_name,
             positionals,
