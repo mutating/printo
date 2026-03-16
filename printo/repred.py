@@ -86,7 +86,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     ignored_parameters = set(ignore)
 
     if positionals:
-        for parameter_name in ignore:
+        for parameter_name in positionals:
             if not parameter_name.isidentifier():
                 raise ValueError(f'You have specified the parameter name {parameter_name!r} as a positional, which is not a valid identifier name in Python.')
     else:
