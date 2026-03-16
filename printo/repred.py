@@ -44,7 +44,12 @@ def repred(cls: ClassType) -> ClassType:
 
     init_signature: Optional[Signature] = signature(cls.__init__)
 
-    for position, parameter in enumerate(cast(Signature, init_signature).parameters.values()):
+    if getattr_static(cls, '__init__') is not object.__init__:
+        parameters = cast(Signature, init_signature).parameters.values()
+    else:
+        parameters = []
+
+    for position, parameter in enumerate(parameters):
         if position:
             parameter_name = parameter.name
             if parameter_name not in names_mapping and parameter.default == parameter.empty:
