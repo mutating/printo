@@ -19,9 +19,9 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
     tree = parse(source)
 
     try:
-        self_name = tree.body[0].args.args[0].arg
-    except IndexError:
         self_name = tree.body[0].args.posonlyargs[0].arg
+    except IndexError:
+        self_name = tree.body[0].args.args[0].arg
 
     results = {}
     for node in tree.body[0].body:
