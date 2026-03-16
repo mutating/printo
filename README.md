@@ -148,6 +148,8 @@ print(
 
 ## Auto mode
 
+> ⚠️ Auto mode is currently experimental, so there may be some bugs.
+
 You can remove the boilerplate code by using the `@repred` decorator for your class:
 
 ```python
@@ -279,5 +281,3 @@ def function():
 print(function()(123, 456))
 #> function.<locals>.SomeClass(a=123, b=456)
 ```
-
-> ⚠️ Auto mode is currently experimental, so there may be some bugs.
