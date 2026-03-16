@@ -255,16 +255,16 @@ print(SomeClass(123, 456))
 By default, the class name is displayed based on its `__name__` attribute, but you can configure it to use the `__qualname__` attribute instead:
 
 ```python
-# Imagine that this code is in module some.path.to 
+def function():
+    @repred(qualname=True)
+    class SomeClass:
+        def __init__(self, a, b):
+            self.a = a
+            self.b = b
+    return SomeClass
 
-@repred(qualname=True)
-class SomeClass:
-    def __init__(self, a, b):
-        self.a = a
-        self.b = b
-
-print(SomeClass(123, 456))
-#> some.path.to.SomeClass(a=123, b=456)
+print(function()(123, 456))
+#> function.<locals>.SomeClass(a=123, b=456)
 ```
 
 > ⚠️ Automatic mode is currently experimental, so there may be some bugs.
