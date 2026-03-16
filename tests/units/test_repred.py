@@ -135,7 +135,7 @@ def test_set_custom_getters():
 
 
 def test_missing_parameters():
-    with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter were found for the parameter a.')):
+    with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
         @repred
         class Class1:
             def __init__(self, a):
