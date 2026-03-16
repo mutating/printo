@@ -273,3 +273,144 @@ def test_star_kwargs():
     assert repr(Class3(1, 2, 3)) == 'Class3(1, 2, 3)'
     assert repr(Class3(1, 2, c=3)) == 'Class3(1, 2, 3)'
     assert repr(Class3(1, 2, 3, d=4, e=5)) == 'Class3(1, 2, 3, d=4, e=5)'
+
+
+def test_set_filters():
+    @repred(filters={'x': lambda x: x})
+    class Class1:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+    assert repr(Class1(0, 0)) == 'Class1(y=0)'
+
+    @repred(
+        filters={1: lambda x: x},
+        prefer_positional=True,
+    )
+    class Class2:
+        def __init__(self, x, y):
+            self.x = x
+            self.y = y
+
+
+    assert repr(Class2(0, 0)) == 'Class2(0)'
+
+    @repred(
+        filters={0: lambda x: x},
+        prefer_positional=True,
+    )
+    class Class3:
+        def __init__(self, *args):
+            self.x = args
+
+    assert repr(Class3(0, 0, 0)) == 'Class3(0, 0)'
+
+    @repred(
+        filters={0: lambda x: x},
+        prefer_positional=True,
+    )
+    class Class4:
+        def __init__(self, *args):
+            self.x = args
+
+    assert repr(Class3(0, 0, 0)) == 'Class3(0, 0)'
+
+
+def test_qualname():
+    @repred(qualname=True)
+    class Class1:
+        def __init__(self):
+            ...
+
+    @repred(qualname=True)
+    class Class2:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    assert repr(Class1()) == 'test_qualname.<locals>.Class1()'
+
+    assert repr(Class2(1, 2)) == 'test_qualname.<locals>.Class2(a=1, b=2)'
+    assert repr(Class2(1, 2, 3)) == 'test_qualname.<locals>.Class2(a=1, b=2, c=3)'
+    assert repr(Class2(1, 2, c=3)) == 'test_qualname.<locals>.Class2(a=1, b=2, c=3)'
+
+
+def test_wrong_filters():
+    with pytest.raises(ValueError, match=match('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')):
+        @repred(filters={...: lambda x: x})
+        class SomeClass1: ...
+
+    with pytest.raises(ValueError, match=match('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')):
+        @repred(filters={-1: lambda x: x})
+        class SomeClass2: ...
+
+    with pytest.raises(ValueError, match=match('Keys for a filtered dictionary can be either integers starting from 0 or strings (parameter names).')):
+        @repred(filters={'lol kek': lambda x: x})
+        class SomeClass3: ...
+
+    with pytest.raises(SignatureMismatchError, match=match('You have defined a getter for parameter "name" that cannot be called with a single argument.')):
+        @repred(filters={'name': lambda: False})
+        class SomeClass4: ...
+
+    with pytest.raises(SignatureMismatchError, match=match('You have defined a getter for parameter "0" that cannot be called with a single argument.')):
+        @repred(filters={0: lambda: False})
+        class SomeClass5: ...
+
+
+def test_init_without_self():
+    with pytest.raises(ParameterMappingNotFoundError, match=match('It seems that the "self" argument was not found for the __init__ method of class SomeClass.')):
+        @repred
+        class SomeClass:
+            def __init__():
+                ...
+
+
+def test_ignore_wrong_identificator():
+    with pytest.raises(ValueError, match=match('You have specified the parameter name \'lol kek\' to ignore, which is not a valid identifier name in Python.')):
+        @repred(ignore=['lol kek'])
+        class SomeClass:
+            def __init__(self):
+                ...
+
+    with pytest.raises(NameError, match=match('Parameter "lol" is not used when initializing objects of class SomeClass2, but you have defined it as an ignored one.')):
+        @repred(ignore=['lol'])
+        class SomeClass2:
+            def __init__(self):
+                ...
+
+
+def test_simple_ignore():
+    @repred(ignore=['args'])
+    class Class1:
+        def __init__(self, *args):
+            self.args = args
+
+    @repred(ignore=['kwargs'])
+    class Class2:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    @repred(ignore=['c'])
+    class Class3:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(ignore=['a'])
+    class Class4:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    assert repr(Class1()) == 'Class1()'
+    assert repr(Class1(1, 2, 3)) == 'Class1()'
+
+    assert repr(Class2(a=1, b=2, c=3)) == 'Class2()'
+
+    assert repr(Class3(a=1, b=2, c=3)) == 'Class3(a=1, b=2)'
+
+    assert repr(Class4(a=1, b=2, c=3)) == 'Class4(b=2, c=3)'
