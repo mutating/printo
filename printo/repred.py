@@ -51,7 +51,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     )
 
     if cls is None:
-        return partial(repred, prefer_positional=prefer_positional, qualname=qualname, getters=getters, filters=filters)  # type: ignore[return-value]
+        return partial(repred, prefer_positional=prefer_positional, qualname=qualname, getters=getters, filters=filters, ignore=ignore)  # type: ignore[return-value]
 
     if not isclass(cls):
         raise ValueError('The @repred decorator can only be applied to classes.')
@@ -80,7 +80,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     if ignore is not None:
         for parameter_name in ignore:
             if not parameter_name.isidentifier():
-                raise ValueError
+                raise ValueError(f'You have specified the parameter name {parameter_name!r} to ignore, which is not a valid identifier name in Python.')
     else:
         ignore = []
     ignored_parameters = set(ignore)
