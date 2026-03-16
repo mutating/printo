@@ -70,6 +70,14 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
     for position, parameter in enumerate(parameters):
         if position:
             parameter_name = parameter.name
+            if parameter.kind == Parameter.VAR_POSITIONAL:
+                one_star_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
+            elif parameter.kind == Parameter.VAR_KEYWORD:
+                two_stars_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
+
+    for position, parameter in enumerate(parameters):
+        if position:
+            parameter_name = parameter.name
 
             all_parameter_names.add(parameter_name)
 
@@ -81,14 +89,10 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, get
             elif parameter.kind == Parameter.KEYWORD_ONLY:
                 keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
             elif parameter.kind == Parameter.POSITIONAL_OR_KEYWORD:
-                if prefer_positional:
+                if prefer_positional or one_star_parameter is not None:
                     positional_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
                 else:
                     keyword_getters[parameter_name] = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
-            elif parameter.kind == Parameter.VAR_POSITIONAL:
-                one_star_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
-            elif parameter.kind == Parameter.VAR_KEYWORD:
-                two_stars_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
 
             if parameter.default != parameter.empty:
                 default_values[parameter_name] = parameter.default
