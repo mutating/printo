@@ -103,8 +103,8 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
         parameters = []
 
     for position, parameter in enumerate(parameters):
-        if position:
-            parameter_name = parameter.name
+        parameter_name = parameter.name
+        if position and parameter_name not in ignored_parameters:
             if parameter.kind == Parameter.VAR_POSITIONAL:
                 one_star_parameter = partial((lambda key, object_of_this_class: getattr(object_of_this_class, names_mapping[key])), parameter_name)
             elif parameter.kind == Parameter.VAR_KEYWORD:
