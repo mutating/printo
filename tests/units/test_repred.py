@@ -357,3 +357,11 @@ def test_wrong_filters():
     with pytest.raises(SignatureMismatchError, match=match('You have defined a getter for parameter "0" that cannot be called with a single argument.')):
         @repred(filters={0: lambda: False})
         class SomeClass5: ...
+
+
+def test_init_without_self():
+    with pytest.raises(ParameterMappingNotFoundError, match=match('It seems that the "self" argument was not found for the __init__ method of class SomeClass.')):
+        @repred
+        class SomeClass:
+            def __init__():
+                ...
