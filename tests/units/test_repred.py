@@ -448,3 +448,65 @@ def test_set_wrong_positionals():
         class SomeClass4:
             def __init__(self, **a):
                 self.a = a
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter b cannot be represented as a positional one.')):
+        @repred(positionals=['b', 'c'])
+        class SomeClass5:
+            def __init__(self, a, b, c=None):
+                self.a = a
+                self.b = b
+                self.c = c
+
+    with pytest.raises(CanNotBePositionalError, match=match('Parameter c cannot be represented as a positional one.')):
+        @repred(positionals=['c'])
+        class SomeClass5:
+            def __init__(self, a, b, c=None):
+                self.a = a
+                self.b = b
+                self.c = c
+
+
+def test_positionals():
+    @repred(positionals=['a'])
+    class Class1:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(positionals=['a', 'b'])
+    class Class2:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(positionals=['a', 'b', 'c'])
+    class Class3:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    @repred(positionals=['b', 'c'], prefer_positional=True)
+    class Class4:
+        def __init__(self, a, b, c=None):
+            self.a = a
+            self.b = b
+            self.c = c
+
+    assert repr(Class1(1, 2)) == 'Class1(1, b=2)'
+    assert repr(Class1(1, 2, 3)) == 'Class1(1, b=2, c=3)'
+    assert repr(Class1(1, 2, c=3)) == 'Class1(1, b=2, c=3)'
+
+    assert repr(Class2(1, 2)) == 'Class2(1, 2)'
+    assert repr(Class2(1, 2, 3)) == 'Class2(1, 2, c=3)'
+    assert repr(Class2(1, 2, c=3)) == 'Class2(1, 2, c=3)'
+
+    assert repr(Class3(1, 2)) == 'Class3(1, 2)'
+    assert repr(Class3(1, 2, 3)) == 'Class3(1, 2, 3)'
+    assert repr(Class3(1, 2, c=3)) == 'Class3(1, 2, 3)'
+
+    assert repr(Class4(1, 2)) == 'Class4(1, 2)'
+    assert repr(Class4(1, 2, 3)) == 'Class4(1, 2, 3)'
+    assert repr(Class4(1, 2, c=3)) == 'Class4(1, 2, 3)'
