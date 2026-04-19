@@ -58,6 +58,26 @@ def test_superrepr_for_async_bound_method():
     assert superrepr(SomeClass().method) == "method"
 
 
+def test_superrepr_for_static_method():
+    class SomeClass:
+        @staticmethod
+        def method():
+            pass
+
+    assert superrepr(SomeClass.method) == "method"
+    assert superrepr(SomeClass().method) == "method"
+
+
+def test_superrepr_for_class_method():
+    class SomeClass:
+        @classmethod
+        def method(cls):
+            pass
+
+    assert superrepr(SomeClass.method) == "method"
+    assert superrepr(SomeClass().method) == "method"
+
+
 def test_superrepr_for_partial():
     def function(a, b, c):
         pass
