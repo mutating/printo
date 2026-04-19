@@ -9,3 +9,4 @@ from printo.errors import ParameterMappingNotFoundError as ParameterMappingNotFo
 from printo.errors import RedefinitionError as RedefinitionError
 from printo.filters import not_none as not_none
 from printo.repred import repred as repred
+from printo.reprs import superrepr as superrepr
