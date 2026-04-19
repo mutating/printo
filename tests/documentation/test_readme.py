@@ -1,4 +1,6 @@
-from printo import describe_data_object, not_none
+import functools
+
+from printo import describe_data_object, not_none, superrepr
 
 
 def test_basic_usage():
@@ -30,6 +32,20 @@ def test_custom_serializator():
         {'variable_name': 1, 'second_variable_name': 'kek'},
         serializer=lambda x: repr(x * 2),
     ) == "MyClassName(2, 4, 'lollol', variable_name=2, second_variable_name='kekkek')"
+
+
+def test_superrepr_directly():
+    def my_function():
+        pass
+
+    class MyClass:
+        def my_method(self):
+            pass
+
+    assert superrepr(my_function) == 'my_function'
+    assert superrepr(MyClass) == 'MyClass'
+    assert superrepr(MyClass().my_method) == 'my_method'
+    assert superrepr(functools.partial(my_function)) == 'functools.partial(my_function)'
 
 
 def test_placeholders():
