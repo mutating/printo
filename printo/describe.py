@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from printo.reprs import superrepr
 
@@ -20,30 +20,30 @@ def describe_data_object(  # noqa: PLR0913
     )
     get_placeholder: Callable[[Union[str, int]], Optional[str]] = lambda field_name: placeholders.get(field_name) if placeholders is not None else None
 
-    args_description_chunks = []
-    for index, argument in enumerate(args):
-        decider = real_filters.get(index, lambda x: True)  # noqa: ARG005
-        if decider(argument):
-            placeholder = get_placeholder(index)
-            if placeholder is not None:
-                serialized_value = placeholder
-            else:
-                serialized_value = serializer(argument)
-            args_description_chunks.append(serialized_value)
-    args_description: str = ', '.join(args_description_chunks)
-
-    kwargs_description_chunks = []
-    for argument_name, value in kwargs.items():
-        decider = real_filters.get(argument_name, lambda x: True)  # noqa: ARG005
+    def serialize_item(
+        key: Union[str, int],
+        value: Any,
+    ) -> Optional[str]:
+        decider = real_filters.get(key, lambda x: True)  # noqa: ARG005
         PossibleCallMatcher('.').match(decider, raise_exception=True)
-        if decider(value):
-            placeholder = get_placeholder(argument_name)
-            if placeholder is not None:
-                serialized_value = placeholder
-            else:
-                serialized_value = serializer(value)
-            kwargs_description_chunks.append(f'{argument_name}=' + serialized_value)
-    kwargs_description: str = ', '.join(kwargs_description_chunks)
+        if not decider(value):
+            return None
+        placeholder = get_placeholder(key)
+        return placeholder if placeholder is not None else serializer(value)
+
+    def serialize_items(
+        items: Iterable[Tuple[Union[str, int], Any]],
+        format_chunk: Callable[[Union[str, int], str], str],
+    ) -> str:
+        chunks = []
+        for key, value in items:
+            result = serialize_item(key, value)
+            if result is not None:
+                chunks.append(format_chunk(key, result))
+        return ', '.join(chunks)
+
+    args_description = serialize_items(enumerate(args), lambda _, value: value)
+    kwargs_description = serialize_items(kwargs.items(), lambda key, value: f'{key}={value}')
 
     breackets_content = ', '.join(
         [x for x in (args_description, kwargs_description) if x],
