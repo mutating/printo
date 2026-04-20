@@ -1,10 +1,11 @@
-from inspect import isclass, isfunction
+import functools
+from inspect import isclass, isfunction, ismethod
 from typing import Any
 
 from getsources import UncertaintyWithLambdasError, getclearsource
 
 
-def superrepr(value: Any) -> str:
+def superrepr(value: Any) -> str:  # noqa: PLR0911
     if isfunction(value):
         result = value.__name__
 
@@ -16,7 +17,17 @@ def superrepr(value: Any) -> str:
 
         return result
 
+    if ismethod(value):
+        return value.__name__
+
     if isclass(value):
         return value.__name__
+
+    if isinstance(value, functools.partial):
+        func_repr = superrepr(value.func)
+        parts = [func_repr]
+        parts.extend(superrepr(arg) for arg in value.args)
+        parts.extend(f'{k}={superrepr(v)}' for k, v in value.keywords.items())
+        return f'functools.partial({", ".join(parts)})'
 
     return repr(value)

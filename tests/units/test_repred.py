@@ -10,6 +10,18 @@ from printo import (
 )
 
 
+def test_repred_with_async_function_value():
+    @repred
+    class SomeClass:
+        def __init__(self, function):
+            self.function = function
+
+    async def some_function():
+        pass
+
+    assert repr(SomeClass(some_function)) == 'SomeClass(function=some_function)'
+
+
 def test_apply_decorator_to_wrong_object():
     with pytest.raises(ValueError, match=match('The @repred decorator can only be applied to classes.')):
         repred(123)

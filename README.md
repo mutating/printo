@@ -121,6 +121,29 @@ print(
 #> MyClassName(2, 4, 'lollol', variable_name=2, second_variable_name='kekkek')
 ```
 
+The default serializer is `superrepr`, and you can also import and use it directly to display individual values:
+
+```python
+import functools
+from printo import superrepr
+
+def my_function():
+    pass
+
+class MyClass:
+    def my_method(self):
+        pass
+
+print(superrepr(my_function))
+#> my_function
+print(superrepr(MyClass))
+#> MyClass
+print(superrepr(MyClass().my_method))
+#> my_method
+print(superrepr(functools.partial(my_function)))
+#> functools.partial(my_function)
+```
+
 
 ## Placeholders
 

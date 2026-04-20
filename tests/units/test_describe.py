@@ -247,9 +247,20 @@ def test_wrong_filter_callback():
     with pytest.raises(SignatureMismatchError):
         describe_data_object('ClassName', (), {'lol': 1, 'kek': 2}, filters={'kek': lambda x, y: x + y})
 
+    with pytest.raises(SignatureMismatchError):
+        describe_data_object('ClassName', (1, 2, 3), {}, filters={0: lambda x, y: x + y})
+
 
 def test_print_classes():
     class SomeClass:
         pass
 
     assert describe_data_object('ClassName', (int, str, SomeClass), {'lol': int, 'kek': str, 'cheburek': SomeClass}) == 'ClassName(int, str, SomeClass, lol=int, kek=str, cheburek=SomeClass)'
+
+
+def test_async_function_as_argument():
+    async def function():
+        pass
+
+    assert describe_data_object('ClassName', (function,), {}) == 'ClassName(function)'
+    assert describe_data_object('ClassName', (), {'function': function}) == 'ClassName(function=function)'
