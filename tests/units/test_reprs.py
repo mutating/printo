@@ -96,3 +96,47 @@ def test_superrepr_for_partial_with_class():
         pass
 
     assert superrepr(functools.partial(SomeClass)) == "functools.partial(SomeClass)"
+
+
+def test_superrepr_for_object_with_broken_repr():
+    class BrokenRepr:
+        def __repr__(self):
+            raise RuntimeError("repr is broken")
+
+    assert superrepr(BrokenRepr()) == "<BrokenRepr>"
+
+
+def test_superrepr_for_object_with_repr_raising_different_exceptions():
+    class RaisesValueError:
+        def __repr__(self):
+            raise ValueError("value error")
+
+    class RaisesTypeError:
+        def __repr__(self):
+            raise TypeError("type error")
+
+    class RaisesAttributeError:
+        def __repr__(self):
+            raise AttributeError("attr error")
+
+    class RaisesRecursionError:
+        def __repr__(self):
+            raise RecursionError("recursion error")
+
+    assert superrepr(RaisesValueError()) == "<RaisesValueError>"
+    assert superrepr(RaisesTypeError()) == "<RaisesTypeError>"
+    assert superrepr(RaisesAttributeError()) == "<RaisesAttributeError>"
+    assert superrepr(RaisesRecursionError()) == "<RaisesRecursionError>"
+
+
+def test_superrepr_for_object_with_broken_repr_and_broken_type():
+    class BrokenMeta(type):
+        @property
+        def __name__(cls):
+            raise RuntimeError("name is broken")
+
+    class BrokenEverything(metaclass=BrokenMeta):
+        def __repr__(self):
+            raise RuntimeError("repr is broken")
+
+    assert superrepr(BrokenEverything()) == "<unprintable>"

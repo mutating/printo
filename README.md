@@ -28,6 +28,7 @@ Pythonistas follow an implicit convention to create special [`__repr__`](https:/
 - [**Filtering**](#filtering)
 - [**Custom display of objects**](#custom-display-of-objects)
 - [**Placeholders**](#placeholders)
+- [**Output limits**](#output-limits)
 - [**Auto mode**](#auto-mode)
 
 
@@ -169,6 +170,41 @@ print(
 > 🤓 If you set a placeholder for a parameter, the [custom serializer](#custom-display-of-objects) will not be applied to it.
 
 
+## Output limits
+
+You can limit the length of individual serialized values with `item_limit`, and the total length of the output string with `total_limit`. Both are disabled by default (`None`).
+
+`item_limit` truncates each serialized value to at most `N` characters, appending `...` if the value is longer:
+
+```python
+print(
+    describe_data_object(
+        'MyClass',
+        (123456789,),
+        {'name': 'a very long string'},
+        item_limit=5,
+    )
+)
+#> MyClass(12345..., name='a v'...)
+```
+
+`total_limit` limits the total length of the output. If the output would be too long, whole items are dropped from the right and replaced with `...`:
+
+```python
+print(
+    describe_data_object(
+        'MyClass',
+        (),
+        {'a': 1, 'b': 2, 'c': 3},
+        total_limit=20,
+    )
+)
+#> MyClass(a=1, ...)
+```
+
+If `total_limit` is too small to fit even `ClassName(...)`, a `ValueError` is raised. The minimum valid value is `len(class_name) + 5`.
+
+
 ## Auto mode
 
 > ⚠️ Auto mode is currently experimental, so there may be some bugs.
@@ -196,6 +232,19 @@ print(SomeClass(1, 2, 3, 4, 5, d=lambda x: x))
 ```
 
 How does it work? Behind the scenes, the decorator uses AST analysis to generate code. The decorator attempts to determine which arguments passed to `__init__` are stored in which attributes. In other words, it looks for direct assignments of the form `self.a = a` in the `__init__` method.
+
+Conditional (ternary) assignments are also recognized. If you write `self.a = a if a else default`, the decorator understands that parameter `a` is stored in attribute `a`:
+
+```python
+@repred
+class SomeClass:
+    def __init__(self, a, b):
+        self.a = a if a is not None else 0
+        self.b = b
+
+print(SomeClass(42, 'hello'))
+#> SomeClass(a=42, b='hello')
+```
 
 If there is no *direct assignment* of a specific argument, an exception will be raised:
 

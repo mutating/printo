@@ -1,4 +1,4 @@
-from ast import Assign, Attribute, Name, parse
+from ast import Assign, Attribute, IfExp, Name, parse
 from functools import partial
 from inspect import Parameter, Signature, getattr_static, isclass, signature
 from typing import (
@@ -44,8 +44,15 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
 
     results = {}
     for node in tree.body[0].body:  # type: ignore[attr-defined]
-        if isinstance(node, Assign) and len(node.targets) == 1 and isinstance(node.targets[0], Attribute) and isinstance(node.targets[0].value, Name) and node.targets[0].value.id == self_name and isinstance(node.value, Name):
-            results[node.value.id] = node.targets[0].attr
+        if isinstance(node, Assign) and len(node.targets) == 1 and isinstance(node.targets[0], Attribute) and isinstance(node.targets[0].value, Name) and node.targets[0].value.id == self_name:
+            attr_name = node.targets[0].attr
+            if isinstance(node.value, Name):
+                results[node.value.id] = attr_name
+            elif isinstance(node.value, IfExp):
+                for branch in (node.value.body, node.value.orelse):
+                    if isinstance(branch, Name) and branch.id != self_name:
+                        results[branch.id] = attr_name
+                        break
 
     return results
 

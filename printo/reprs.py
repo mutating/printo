@@ -30,4 +30,10 @@ def superrepr(value: Any) -> str:  # noqa: PLR0911
         parts.extend(f'{k}={superrepr(v)}' for k, v in value.keywords.items())
         return f'functools.partial({", ".join(parts)})'
 
-    return repr(value)
+    try:
+        return repr(value)
+    except Exception:  # noqa: BLE001
+        try:
+            return f'<{type(value).__name__}>'
+        except Exception:  # noqa: BLE001
+            return '<unprintable>'

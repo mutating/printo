@@ -58,3 +58,33 @@ def test_placeholders():
             'variable_name': '***',
         },
     ) == "MySuperClass(1, ***, 'lol', variable_name=***, second_variable_name='kek')"
+
+
+def test_item_limit():
+    assert describe_data_object(
+        'MyClass',
+        (123456789,),
+        {'name': 'a very long string'},
+        item_limit=5,
+    ) == "MyClass(12345..., name='a v'...)"
+
+
+def test_total_limit():
+    assert describe_data_object(
+        'MyClass',
+        (),
+        {'a': 1, 'b': 2, 'c': 3},
+        total_limit=20,
+    ) == 'MyClass(a=1, ...)'
+
+
+def test_repred_conditional_expression():
+    from printo import repred  # noqa: PLC0415
+
+    @repred
+    class SomeClass:
+        def __init__(self, a: int, b: str) -> None:
+            self.a = a if a is not None else 0
+            self.b = b
+
+    assert repr(SomeClass(42, 'hello')) == "SomeClass(a=42, b='hello')"
