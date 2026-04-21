@@ -1,5 +1,7 @@
 import functools
 
+from suby import run  # type: ignore[import-not-found]
+
 from printo.reprs import superrepr
 
 
@@ -33,6 +35,19 @@ def test_superrepr_for_lambda_functions_when_they_are_multple_in_one_line():
 
     assert superrepr(lambdas[0]) == "λ"
     assert superrepr(lambdas[1]) == "λ"
+
+
+def test_superrepr_for_lambda_without_source():
+    # A lambda defined via python -c has no retrievable source file.
+    # superrepr must return 'λ' instead of raising OSError.
+    result = run(
+        'python3', '-c',
+        'from printo import superrepr; print(superrepr(lambda value, extra: False))',
+        catch_output=True,
+        split=False,
+    )
+
+    assert result.stdout.strip() == 'λ'
 
 
 def test_superrepr_for_async_function():

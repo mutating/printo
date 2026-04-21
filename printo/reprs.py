@@ -12,7 +12,7 @@ def superrepr(value: Any) -> str:  # noqa: PLR0911
         if result == '<lambda>':
             try:
                 return getclearsource(value)
-            except UncertaintyWithLambdasError:
+            except (UncertaintyWithLambdasError, OSError):
                 return 'λ'
 
         return result
