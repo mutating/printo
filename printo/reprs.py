@@ -34,6 +34,6 @@ def superrepr(value: Any) -> str:  # noqa: PLR0911
         return repr(value)
     except Exception:  # noqa: BLE001
         try:
-            return f'<{type(value).__name__}>'
+            return f"<{type(value).__name__}'s object>"
         except Exception:  # noqa: BLE001
             return '<unprintable>'

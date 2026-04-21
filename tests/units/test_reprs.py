@@ -103,7 +103,7 @@ def test_superrepr_for_object_with_broken_repr():
         def __repr__(self):
             raise RuntimeError("repr is broken")
 
-    assert superrepr(BrokenRepr()) == "<BrokenRepr>"
+    assert superrepr(BrokenRepr()) == "<BrokenRepr's object>"
 
 
 def test_superrepr_for_object_with_repr_raising_different_exceptions():
@@ -123,10 +123,10 @@ def test_superrepr_for_object_with_repr_raising_different_exceptions():
         def __repr__(self):
             raise RecursionError("recursion error")
 
-    assert superrepr(RaisesValueError()) == "<RaisesValueError>"
-    assert superrepr(RaisesTypeError()) == "<RaisesTypeError>"
-    assert superrepr(RaisesAttributeError()) == "<RaisesAttributeError>"
-    assert superrepr(RaisesRecursionError()) == "<RaisesRecursionError>"
+    assert superrepr(RaisesValueError()) == "<RaisesValueError's object>"
+    assert superrepr(RaisesTypeError()) == "<RaisesTypeError's object>"
+    assert superrepr(RaisesAttributeError()) == "<RaisesAttributeError's object>"
+    assert superrepr(RaisesRecursionError()) == "<RaisesRecursionError's object>"
 
 
 def test_superrepr_for_object_with_broken_repr_and_broken_type():
