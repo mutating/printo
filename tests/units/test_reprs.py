@@ -44,7 +44,7 @@ def test_superrepr_for_lambda_without_source_old_python():
     # On Python < 3.13, source of a lambda defined in -c is not retrievable.
     # getclearsource raises OSError, and superrepr must fall back to 'λ'.
     result = run(
-        'python3', '-c',
+        sys.executable, '-c',
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
         catch_output=True,
         split=False,
@@ -58,7 +58,7 @@ def test_superrepr_for_lambda_without_source_new_python():
     # On Python 3.13+, source introspection for -c lambdas works,
     # so superrepr returns the actual source code.
     result = run(
-        'python3', '-c',
+        sys.executable, '-c',
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
         catch_output=True,
         split=False,
