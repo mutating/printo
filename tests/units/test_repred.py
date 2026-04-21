@@ -3,6 +3,7 @@ from full_match import match
 from sigmatch import SignatureMismatchError
 
 from printo import (
+    AmbiguousMappingError,
     CanNotBePositionalError,
     ParameterMappingNotFoundError,
     RedefinitionError,
@@ -21,7 +22,7 @@ def test_repred_with_broken_repr_attribute():
             raise RuntimeError("repr is broken")
 
     result = repr(SomeClass(BrokenRepr()))
-    assert result == 'SomeClass(value=<BrokenRepr>)'
+    assert result == "SomeClass(value=<BrokenRepr's object>)"
 
 
 def test_repred_with_async_function_value():
@@ -501,24 +502,23 @@ def test_conditional_expression_not_recognized():
 
 
 def test_conditional_expression_nested():
-    @repred
-    class SomeClass:
-        def __init__(self, a, b):
-            self.a = a if a else (b if b else 0)
-            self.b = b
-
-    assert repr(SomeClass(1, 2)) == 'SomeClass(a=1, b=2)'
+    # orelse is IfExp -> nested ternary, not supported; self.a not mapped -> error
+    with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
+        @repred
+        class SomeClass:
+            def __init__(self, a, b):
+                self.a = a if a else (b if b else 0)
+                self.b = b
 
 
 def test_conditional_expression_both_branches_are_params():
-    @repred
-    class SomeClass:
-        def __init__(self, a, b):
-            self.x = a if True else b
-            self.b = b
-
-    # body=Name('a') takes priority; repr uses param name 'a', reads attr 'x'
-    assert repr(SomeClass(1, 2)) == 'SomeClass(a=1, b=2)'
+    # Both branches are different params -> AmbiguousMappingError
+    with pytest.raises(AmbiguousMappingError):
+        @repred
+        class SomeClass:
+            def __init__(self, a, b):
+                self.x = a if True else b
+                self.b = b
 
 
 def test_set_wrong_positionals():
@@ -607,3 +607,102 @@ def test_positionals():
     assert repr(Class4(1, 2)) == 'Class4(1, 2)'
     assert repr(Class4(1, 2, 3)) == 'Class4(1, 2, 3)'
     assert repr(Class4(1, 2, c=3)) == 'Class4(1, 2, 3)'
+
+
+def test_ternary_ambiguity_basic():
+    with pytest.raises(AmbiguousMappingError, match=r'self\.x'):
+        @repred
+        class SomeClass:
+            def __init__(self, a, b):
+                self.x = a if True else b
+                self.b = b
+
+
+def test_ternary_ambiguity_resolved_by_getters():
+    @repred(getters={'a': lambda obj: obj.x, 'b': lambda obj: obj.x})
+    class SomeClass:
+        def __init__(self, a, b):
+            self.x = a if True else b
+
+    assert repr(SomeClass(1, 2)) == 'SomeClass(a=1, b=1)'
+
+
+def test_ternary_ambiguity_one_getter_missing():
+    with pytest.raises(AmbiguousMappingError):
+        @repred(getters={'a': lambda obj: obj.x})
+        class SomeClass:
+            def __init__(self, a, b):
+                self.x = a if True else b
+                self.b = b
+
+
+def test_ternary_ambiguity_one_ignored():
+    # One param ignored, the other has no getter -> still AmbiguousMappingError
+    with pytest.raises(AmbiguousMappingError):
+        @repred(ignore=['a'])
+        class SomeClass:
+            def __init__(self, a, b):
+                self.x = a if True else b
+                self.b = b
+
+
+def test_ternary_ambiguity_both_ignored():
+    @repred(ignore=['a', 'b'])
+    class SomeClass:
+        def __init__(self, a, b):
+            self.x = a if True else b
+
+    assert repr(SomeClass(1, 2)) == 'SomeClass()'
+
+
+def test_ternary_ambiguity_one_ignored_one_getter():
+    @repred(ignore=['a'], getters={'b': lambda obj: obj.x})
+    class SomeClass:
+        def __init__(self, a, b):
+            self.x = a if True else b
+
+    assert repr(SomeClass(1, 2)) == 'SomeClass(b=1)'
+
+
+def test_ternary_same_param_both_branches():
+    # self.a = a if cond else a — both branches same param, not ambiguous
+    @repred
+    class SomeClass:
+        def __init__(self, a):
+            self.a = a if a else a  # noqa: RUF034
+
+    assert repr(SomeClass(42)) == 'SomeClass(a=42)'
+    assert repr(SomeClass(0)) == 'SomeClass(a=0)'
+
+
+def test_nested_ternary_rejected():
+    # body is IfExp -> nested, not supported -> self.a not mapped -> ParameterMappingNotFoundError
+    with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
+        @repred
+        class SomeClass:
+            def __init__(self, a, b, c):
+                self.a = (a if True else b) if True else c
+                self.b = b
+                self.c = c
+
+
+def test_nested_ternary_in_orelse():
+    # orelse is IfExp -> nested, not supported -> self.a not mapped -> ParameterMappingNotFoundError
+    with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
+        @repred
+        class SomeClass:
+            def __init__(self, a, b, c):
+                self.a = a if True else (b if True else c)
+                self.b = b
+                self.c = c
+
+
+def test_nested_ternary_with_getter():
+    # Nested ternary + getter for the unmapped param -> works fine
+    @repred(getters={'a': lambda obj: obj.a})
+    class SomeClass:
+        def __init__(self, a, b):
+            self.a = a if True else (b if True else 0)
+            self.b = b
+
+    assert repr(SomeClass(1, 2)) == 'SomeClass(a=1, b=2)'
