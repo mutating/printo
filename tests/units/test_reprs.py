@@ -230,6 +230,5 @@ def test_superrepr_for_class_with_broken_name():
     class BadNameClass(metaclass=BadNameMeta):
         pass
 
-    expected = "<class 'tests.units.test_reprs.test_superrepr_for_class_with_broken_name.<locals>.BadNameClass'>"
-    assert superrepr(BadNameClass) == expected
+    assert superrepr(BadNameClass) == "<class 'tests.units.test_reprs.test_superrepr_for_class_with_broken_name.<locals>.BadNameClass'>"
     assert superrepr(BadNameClass) == repr(BadNameClass)
