@@ -202,7 +202,7 @@ print(
 #> MyClass(a=1, ...)
 ```
 
-If `total_limit` is too small to fit even `ClassName(...)`, a `ValueError` is raised. The minimum valid value is `len(class_name) + 5`.
+If `total_limit` is too small to fit even `ClassName()`, a `ValueError` is raised. The minimum valid value is `len(class_name) + 2`.
 
 
 ## Auto mode
