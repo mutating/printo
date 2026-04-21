@@ -17,15 +17,18 @@ def _get_lambda_symbol() -> str:
 
 def superrepr(value: Any) -> str:  # noqa: PLR0911
     if isfunction(value) or ismethod(value) or isclass(value):
-        result = value.__name__
+        try:
+            result = value.__name__
+        except Exception:  # noqa: BLE001
+            pass
+        else:
+            if isfunction(value) and result == '<lambda>':
+                try:
+                    return getclearsource(value)
+                except (UncertaintyWithLambdasError, OSError):
+                    return _get_lambda_symbol()
 
-        if isfunction(value) and result == '<lambda>':
-            try:
-                return getclearsource(value)
-            except (UncertaintyWithLambdasError, OSError):
-                return _get_lambda_symbol()
-
-        return result
+            return result
 
     if isinstance(value, functools.partial):
         from printo.describe import describe_data_object  # noqa: PLC0415

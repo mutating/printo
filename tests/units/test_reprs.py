@@ -211,3 +211,25 @@ def test_superrepr_for_object_with_broken_repr_and_broken_type():
             raise RuntimeError("repr is broken")
 
     assert superrepr(BrokenEverything()) == "<unprintable>"
+
+
+def test_superrepr_for_class_with_broken_name():
+    """
+    When __name__ raises, superrepr falls through to repr().
+
+    type.__repr__ reads the class name via the C-level tp_name slot, bypassing
+    Python-level __getattribute__, so repr() succeeds and returns the standard
+    class repr string like "<class '...BadNameClass'>".
+    """
+    class BadNameMeta(type):
+        def __getattribute__(cls, name: str) -> object:
+            if name == '__name__':
+                raise RuntimeError('broken __name__')
+            return super().__getattribute__(name)
+
+    class BadNameClass(metaclass=BadNameMeta):
+        pass
+
+    expected = "<class 'tests.units.test_reprs.test_superrepr_for_class_with_broken_name.<locals>.BadNameClass'>"
+    assert superrepr(BadNameClass) == expected
+    assert superrepr(BadNameClass) == repr(BadNameClass)
