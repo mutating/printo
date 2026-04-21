@@ -1,5 +1,7 @@
 import functools
+import sys
 
+import pytest
 from suby import run  # type: ignore[import-not-found]
 
 from printo.reprs import superrepr
@@ -37,9 +39,10 @@ def test_superrepr_for_lambda_functions_when_they_are_multple_in_one_line():
     assert superrepr(lambdas[1]) == "λ"
 
 
-def test_superrepr_for_lambda_without_source():
-    # A lambda defined via python -c has no retrievable source file.
-    # superrepr must return 'λ' instead of raising OSError.
+@pytest.mark.skipif(sys.version_info >= (3, 13), reason='Python 3.13+ can introspect -c lambdas')
+def test_superrepr_for_lambda_without_source_old_python():
+    # On Python < 3.13, source of a lambda defined in -c is not retrievable.
+    # getclearsource raises OSError, and superrepr must fall back to 'λ'.
     result = run(
         'python3', '-c',
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
@@ -48,6 +51,20 @@ def test_superrepr_for_lambda_without_source():
     )
 
     assert result.stdout.strip() == 'λ', f'stdout={result.stdout!r} stderr={result.stderr!r}'
+
+
+@pytest.mark.skipif(sys.version_info < (3, 13), reason='Python < 3.13 cannot introspect -c lambdas')
+def test_superrepr_for_lambda_without_source_new_python():
+    # On Python 3.13+, source introspection for -c lambdas works,
+    # so superrepr returns the actual source code.
+    result = run(
+        'python3', '-c',
+        'from printo import superrepr; print(superrepr(lambda value, extra: False))',
+        catch_output=True,
+        split=False,
+    )
+
+    assert result.stdout.strip() == 'lambda value, extra: False', f'stdout={result.stdout!r} stderr={result.stderr!r}'
 
 
 def test_superrepr_for_async_function():
