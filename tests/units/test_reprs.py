@@ -48,6 +48,7 @@ def test_superrepr_for_lambda_without_source_old_python():
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
         catch_output=True,
         split=False,
+        add_env={'PYTHONUTF8': '1'},
     )
 
     assert result.stdout.strip() == 'λ', f'stdout={result.stdout!r} stderr={result.stderr!r}'
@@ -62,6 +63,7 @@ def test_superrepr_for_lambda_without_source_new_python():
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
         catch_output=True,
         split=False,
+        add_env={'PYTHONUTF8': '1'},
     )
 
     assert result.stdout.strip() == 'lambda value, extra: False', f'stdout={result.stdout!r} stderr={result.stderr!r}'
