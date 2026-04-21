@@ -30,7 +30,7 @@ def superrepr(value: Any) -> str:  # noqa: PLR0911
 
             return result
 
-    if isinstance(value, functools.partial):
+    elif isinstance(value, functools.partial):
         from printo.describe import describe_data_object  # noqa: PLC0415
 
         return describe_data_object('functools.partial', (value.func, *value.args), value.keywords)
