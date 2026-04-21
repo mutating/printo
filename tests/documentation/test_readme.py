@@ -1,14 +1,14 @@
 import functools
 
-from printo import describe_data_object, not_none, superrepr
+from printo import describe_call, not_none, superrepr
 
 
 def test_basic_usage():
-    assert describe_data_object('MyClassName', (1, 2, 'some text'), {'variable_name': 1, 'second_variable_name': 'kek'}) == "MyClassName(1, 2, 'some text', variable_name=1, second_variable_name='kek')"
+    assert describe_call('MyClassName', (1, 2, 'some text'), {'variable_name': 1, 'second_variable_name': 'kek'}) == "MyClassName(1, 2, 'some text', variable_name=1, second_variable_name='kek')"
 
 
 def test_basic_filtering():
-    assert describe_data_object(
+    assert describe_call(
         'MyClassName',
         (1, 2, 'some text'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -17,7 +17,7 @@ def test_basic_filtering():
 
 
 def test_filtering_of_nones():
-    assert describe_data_object(
+    assert describe_call(
         'MyClassName',
         (1, None),
         {},
@@ -26,7 +26,7 @@ def test_filtering_of_nones():
 
 
 def test_custom_serializator():
-    assert describe_data_object(
+    assert describe_call(
         'MyClassName',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -49,7 +49,7 @@ def test_superrepr_directly():
 
 
 def test_placeholders():
-    assert describe_data_object(
+    assert describe_call(
         'MySuperClass',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -61,7 +61,7 @@ def test_placeholders():
 
 
 def test_item_limit():
-    assert describe_data_object(
+    assert describe_call(
         'MyClass',
         (123456789,),
         {'name': 'a very long string'},
@@ -70,7 +70,7 @@ def test_item_limit():
 
 
 def test_total_limit():
-    assert describe_data_object(
+    assert describe_call(
         'MyClass',
         (),
         {'a': 1, 'b': 2, 'c': 3},
