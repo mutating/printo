@@ -558,5 +558,4 @@ def test_total_limit_ellipsis_mixed_positions():
     'C(1, Ellipsis, 2)' = 18 chars.
     Drop '2': content = 'C(1, Ellipsis)' = 14 chars.
     """
-    result = describe_data_object('C', (1, ..., 2), {}, total_limit=14)
-    assert result == 'C(1, Ellipsis, ...)'
+    assert describe_data_object('C', (1, ..., 2), {}, total_limit=14) == 'C(1, Ellipsis, ...)'
