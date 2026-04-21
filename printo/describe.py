@@ -51,7 +51,7 @@ def _serialize_items(  # noqa: PLR0913
     return chunks, pinned
 
 
-def describe_data_object(  # noqa: PLR0913
+def describe_call(  # noqa: PLR0913
     class_name: str,
     args: Union[Tuple[Any, ...], List[Any]],
     kwargs: Dict[str, Any],
@@ -116,4 +116,5 @@ def describe_data_object(  # noqa: PLR0913
     return full_output
 
 
-descript_data_object = describe_data_object
+descript_data_object = describe_call
+describe_data_object = describe_call

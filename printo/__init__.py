@@ -1,4 +1,7 @@
 from printo.describe import (
+    describe_call as describe_call,
+)
+from printo.describe import (
     describe_data_object as describe_data_object,
 )
 from printo.describe import (

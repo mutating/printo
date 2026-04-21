@@ -45,7 +45,7 @@ You can also use [`instld`](https://github.com/pomponchik/instld) to quickly try
 
 ## Basic usage
 
-The main function in this library is `describe_data_object`; it returns a string representing the initialization code for your object. There are three required positional parameters:
+The main function in this library is `describe_call`; it returns a string representing the initialization code for your object. There are three required positional parameters:
 
 - A class name.
 - A `list` or `tuple` of positional arguments.
@@ -54,10 +54,10 @@ The main function in this library is `describe_data_object`; it returns a string
 Here's a simple example of how it works:
 
 ```python
-from printo import describe_data_object
+from printo import describe_call
 
 print(
-    describe_data_object(
+    describe_call(
         'MyClassName',
         (1, 2, 'some text'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -73,7 +73,7 @@ You can prevent individual parameters from being displayed. To do this, pass a `
 
 ```python
 print(
-    describe_data_object(
+    describe_call(
         'MyClassName',
         (1, 2, 'some text'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -89,7 +89,7 @@ You can also use the provided `not_none` filter to automatically exclude `None` 
 from printo import not_none
 
 print(
-    describe_data_object(
+    describe_call(
         'MyClassName',
         (1, None),
         {},
@@ -112,7 +112,7 @@ You can provide a custom serialization function for each argument value via the 
 
 ```python
 print(
-    describe_data_object(
+    describe_call(
         'MyClassName',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -154,7 +154,7 @@ Pass a `dict` to the `placeholders` parameter, where the keys are argument names
 
 ```python
 print(
-    describe_data_object(
+    describe_call(
         'MySuperClass',
         (1, 2, 'lol'),
         {'variable_name': 1, 'second_variable_name': 'kek'},
@@ -178,7 +178,7 @@ You can limit the length of individual serialized values with `item_limit`, and 
 
 ```python
 print(
-    describe_data_object(
+    describe_call(
         'MyClass',
         (123456789,),
         {'name': 'a very long string'},
@@ -192,7 +192,7 @@ print(
 
 ```python
 print(
-    describe_data_object(
+    describe_call(
         'MyClass',
         (),
         {'a': 1, 'b': 2, 'c': 3},

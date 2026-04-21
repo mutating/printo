@@ -18,7 +18,7 @@ from typing import (
 
 from getsources import getclearsource
 
-from printo import describe_data_object
+from printo import describe_call
 from printo.errors import (
     AmbiguousMappingError,
     CanNotBePositionalError,
@@ -230,7 +230,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
 
         class_name = cls.__qualname__ if qualname else cls.__name__
 
-        return describe_data_object(
+        return describe_call(
             class_name,
             positionals,
             keywords,
