@@ -1,10 +1,11 @@
 import functools
+import io
 import sys
 
 import pytest
 from suby import run
 
-from printo.reprs import superrepr
+from printo.reprs import _get_lambda_symbol, superrepr
 
 
 def test_superrepr_basically_is_repr():
@@ -37,6 +38,34 @@ def test_superrepr_for_lambda_functions_when_they_are_multple_in_one_line():
 
     assert superrepr(lambdas[0]) == "λ"
     assert superrepr(lambdas[1]) == "λ"
+
+
+def test_lambda_symbol_unicode_terminal():
+    assert _get_lambda_symbol() == 'λ'
+
+
+def test_lambda_symbol_non_unicode_terminal():
+    original_stdout = sys.stdout
+    sys.stdout = io.TextIOWrapper(io.BytesIO(), encoding='ascii')
+    try:
+        _get_lambda_symbol.cache_clear()
+        assert _get_lambda_symbol() == '<lambda>'
+    finally:
+        sys.stdout = original_stdout
+        _get_lambda_symbol.cache_clear()
+
+
+def test_superrepr_for_lambda_on_non_unicode_terminal():
+    # When stdout encoding can't represent λ, superrepr must return '<lambda>'.
+    result = run(
+        sys.executable, '-c',
+        'from printo import superrepr; print(superrepr(lambda x: x))',
+        catch_output=True,
+        split=False,
+        add_env={'PYTHONIOENCODING': 'ascii', 'PYTHONUTF8': '0'},
+    )
+
+    assert result.stdout.strip() == '<lambda>'
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 13), reason='Python 3.13+ can introspect -c lambdas')

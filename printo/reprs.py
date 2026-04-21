@@ -1,8 +1,18 @@
 import functools
+import sys
 from inspect import isclass, isfunction, ismethod
 from typing import Any
 
 from getsources import UncertaintyWithLambdasError, getclearsource
+
+
+@functools.lru_cache(maxsize=None)
+def _get_lambda_symbol() -> str:
+    try:
+        'λ'.encode(sys.stdout.encoding or 'utf-8')
+        return 'λ'
+    except UnicodeEncodeError:
+        return '<lambda>'
 
 
 def superrepr(value: Any) -> str:  # noqa: PLR0911
@@ -13,7 +23,7 @@ def superrepr(value: Any) -> str:  # noqa: PLR0911
             try:
                 return getclearsource(value)
             except (UncertaintyWithLambdasError, OSError):
-                return 'λ'
+                return _get_lambda_symbol()
 
         return result
 
