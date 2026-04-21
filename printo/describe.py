@@ -3,19 +3,6 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 from printo.reprs import superrepr
 
 
-def _truncate_string_repr(value: str, item_limit: int) -> str:
-    if len(repr('')) > item_limit:
-        return repr(value)[:item_limit] + '...'
-    lo, hi = 0, len(value)
-    while lo < hi:
-        mid = (lo + hi + 1) // 2
-        if len(repr(value[:mid])) <= item_limit:
-            lo = mid
-        else:
-            hi = mid - 1
-    return repr(value[:lo]) + '...'
-
-
 def _serialize_item(  # noqa: PLR0913
     key: Union[str, int],
     value: Any,
@@ -32,10 +19,16 @@ def _serialize_item(  # noqa: PLR0913
         return None
     placeholder = get_placeholder(key)
     serialized = placeholder if placeholder is not None else serializer(value)
-    if item_limit is not None and len(serialized) > item_limit:
-        if placeholder is None and isinstance(value, str) and serialized == repr(value):
-            serialized = _truncate_string_repr(value, item_limit)
-        else:
+    if item_limit is not None:
+        if placeholder is not None:
+            if len(serialized) > item_limit:
+                serialized = serialized[:item_limit] + '...'
+        elif value is ...:
+            pass  # Ellipsis is never truncated
+        elif isinstance(value, (str, bytes)) and serialized == repr(value):
+            if len(value) > item_limit:
+                serialized = repr(value[:item_limit]) + '...'
+        elif len(serialized) > item_limit:
             serialized = serialized[:item_limit] + '...'
     return serialized
 
@@ -47,13 +40,15 @@ def _serialize_items(  # noqa: PLR0913
     get_placeholder: Callable[[Union[str, int]], Optional[str]],
     serializer: Callable[[Any], str],
     item_limit: Optional[int],
-) -> List[str]:
-    chunks = []
+) -> Tuple[List[str], List[bool]]:
+    chunks: List[str] = []
+    pinned: List[bool] = []
     for key, value in items:
         result = _serialize_item(key, value, filters, get_placeholder, serializer, item_limit)
         if result is not None:
             chunks.append(format_chunk(key, result))
-    return chunks
+            pinned.append(value is ...)
+    return chunks, pinned
 
 
 def describe_data_object(  # noqa: PLR0913
@@ -76,11 +71,11 @@ def describe_data_object(  # noqa: PLR0913
     if total_limit is not None:
         if total_limit < 0:
             raise ValueError(f'total_limit must be a non-negative integer, got {total_limit}.')
-        minimum = len(class_name) + 5
+        minimum = len(class_name) + 2
         if total_limit < minimum:
             raise ValueError(
                 f'total_limit ({total_limit}) is too small for class name {class_name!r}. '
-                f'Minimum is {minimum} (class name length + 5 for parentheses and ellipsis).',
+                f'Minimum is {minimum} (class name length + 2 for parentheses).',
             )
 
     real_filters: Dict[Union[str, int], Callable[[Any], bool]] = (
@@ -88,21 +83,35 @@ def describe_data_object(  # noqa: PLR0913
     )
     get_placeholder: Callable[[Union[str, int]], Optional[str]] = lambda field_name: placeholders.get(field_name) if placeholders is not None else None
 
-    args_chunks = _serialize_items(enumerate(args), lambda _, value: value, real_filters, get_placeholder, serializer, item_limit)
-    kwargs_chunks = _serialize_items(kwargs.items(), lambda key, value: f'{key}={value}', real_filters, get_placeholder, serializer, item_limit)
+    args_chunks, args_pinned = _serialize_items(enumerate(args), lambda _, value: value, real_filters, get_placeholder, serializer, item_limit)
+    kwargs_chunks, kwargs_pinned = _serialize_items(kwargs.items(), lambda key, value: f'{key}={value}', real_filters, get_placeholder, serializer, item_limit)
 
     all_chunks = args_chunks + kwargs_chunks
+    all_pinned = args_pinned + kwargs_pinned
 
     full_output = f'{class_name}({", ".join(all_chunks)})'
 
     if total_limit is not None and len(full_output) > total_limit:
-        for k in range(len(all_chunks) - 1, -1, -1):
-            if k == 0:
-                candidate = f'{class_name}(...)'
+        droppable = [i for i in range(len(all_chunks)) if not all_pinned[i]]
+        pinned_indices = [i for i in range(len(all_chunks)) if all_pinned[i]]
+
+        for num_keep in range(len(droppable) - 1, -1, -1):
+            kept_indices = sorted(pinned_indices + droppable[:num_keep])
+            kept_chunks = [all_chunks[i] for i in kept_indices]
+            if kept_chunks:
+                content = f'{class_name}({", ".join(kept_chunks)})'
+                output = f'{class_name}({", ".join(kept_chunks)}, ...)'
             else:
-                candidate = f'{class_name}({", ".join(all_chunks[:k])}, ...)'
-            if len(candidate) <= total_limit:
-                return candidate
+                content = f'{class_name}()'
+                output = f'{class_name}(...)'
+            if len(content) <= total_limit:
+                return output
+
+        # Ellipsis exemption: all droppable dropped, return pinned-only output regardless of limit
+        pinned_chunks = [all_chunks[i] for i in pinned_indices]
+        if not droppable:
+            return full_output
+        return f'{class_name}({", ".join(pinned_chunks)}, ...)'
 
     return full_output
 
