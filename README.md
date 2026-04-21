@@ -185,7 +185,7 @@ print(
         item_limit=5,
     )
 )
-#> MyClass(12345..., name='a v'...)
+#> MyClass(12345..., name='a ver'...)
 ```
 
 `total_limit` limits the total length of the output. If the output would be too long, whole items are dropped from the right and replaced with `...`:
@@ -196,7 +196,7 @@ print(
         'MyClass',
         (),
         {'a': 1, 'b': 2, 'c': 3},
-        total_limit=20,
+        total_limit=15,
     )
 )
 #> MyClass(a=1, ...)

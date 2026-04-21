@@ -66,7 +66,7 @@ def test_item_limit():
         (123456789,),
         {'name': 'a very long string'},
         item_limit=5,
-    ) == "MyClass(12345..., name='a v'...)"
+    ) == "MyClass(12345..., name='a ver'...)"
 
 
 def test_total_limit():
@@ -74,7 +74,7 @@ def test_total_limit():
         'MyClass',
         (),
         {'a': 1, 'b': 2, 'c': 3},
-        total_limit=20,
+        total_limit=15,
     ) == 'MyClass(a=1, ...)'
 
 
