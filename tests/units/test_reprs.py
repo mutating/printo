@@ -57,15 +57,17 @@ def test_lambda_symbol_non_unicode_terminal():
 
 def test_superrepr_for_lambda_on_non_unicode_terminal():
     # When stdout encoding can't represent λ, superrepr must return '<lambda>'.
+    # Two lambdas on one line guarantee UncertaintyWithLambdasError on any Python version,
+    # so the encoding fallback is always reached.
     result = run(
         sys.executable, '-c',
-        'from printo import superrepr; print(superrepr(lambda x: x))',
+        'from printo import superrepr; f = [lambda x: x, lambda y: y][0]; print(superrepr(f))',
         catch_output=True,
         split=False,
         add_env={'PYTHONIOENCODING': 'ascii', 'PYTHONUTF8': '0'},
     )
 
-    assert result.stdout.strip() == '<lambda>'
+    assert result.stdout.strip() == '<lambda>', f'stdout={result.stdout!r} stderr={result.stderr!r}'
 
 
 @pytest.mark.skipif(sys.version_info >= (3, 13), reason='Python 3.13+ can introspect -c lambdas')
