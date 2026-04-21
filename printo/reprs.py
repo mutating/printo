@@ -16,10 +16,10 @@ def _get_lambda_symbol() -> str:
 
 
 def superrepr(value: Any) -> str:  # noqa: PLR0911
-    if isfunction(value):
+    if isfunction(value) or ismethod(value) or isclass(value):
         result = value.__name__
 
-        if result == '<lambda>':
+        if isfunction(value) and result == '<lambda>':
             try:
                 return getclearsource(value)
             except (UncertaintyWithLambdasError, OSError):
@@ -27,18 +27,10 @@ def superrepr(value: Any) -> str:  # noqa: PLR0911
 
         return result
 
-    if ismethod(value):
-        return value.__name__
-
-    if isclass(value):
-        return value.__name__
-
     if isinstance(value, functools.partial):
-        func_repr = superrepr(value.func)
-        parts = [func_repr]
-        parts.extend(superrepr(arg) for arg in value.args)
-        parts.extend(f'{k}={superrepr(v)}' for k, v in value.keywords.items())
-        return f'functools.partial({", ".join(parts)})'
+        from printo.describe import describe_data_object  # noqa: PLC0415
+
+        return describe_data_object('functools.partial', (value.func, *value.args), value.keywords)
 
     try:
         return repr(value)
