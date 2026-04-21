@@ -57,7 +57,8 @@ def test_lambda_symbol_non_unicode_terminal():
 
 
 def test_superrepr_for_lambda_on_non_unicode_terminal():
-    """When stdout encoding can't represent λ, superrepr must return '<lambda>'.
+    """
+    When stdout encoding can't represent λ, superrepr must return '<lambda>'.
 
     Two lambdas on one line guarantee UncertaintyWithLambdasError on any Python version,
     so the encoding fallback is always reached.
@@ -75,7 +76,8 @@ def test_superrepr_for_lambda_on_non_unicode_terminal():
 
 @pytest.mark.skipif(sys.version_info >= (3, 13), reason='Python 3.13+ can introspect -c lambdas')
 def test_superrepr_for_lambda_without_source_old_python():
-    """On Python < 3.13, source of a lambda defined in -c is not retrievable.
+    """
+    On Python < 3.13, source of a lambda defined in -c is not retrievable.
 
     getclearsource raises OSError, and superrepr must fall back to 'λ'.
     """

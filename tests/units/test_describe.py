@@ -284,7 +284,8 @@ def test_item_limit_basic():
 
 
 def test_item_limit_not_exceeded():
-    """'12345' has 5 chars; item_limit=5 -> no truncation.
+    """
+    '12345' has 5 chars; item_limit=5 -> no truncation.
 
     item_limit=4 -> '1234...'.
     """
@@ -319,7 +320,8 @@ def test_item_limit_with_placeholder_not_exceeded():
 
 
 def test_total_limit_basic():
-    """'C(a=1, b=2, c=3)' = 16 chars; total_limit=10.
+    """
+    'C(a=1, b=2, c=3)' = 16 chars; total_limit=10.
 
     content 'C(a=1, b=2)' = 11 > 10; content 'C(a=1)' = 7 <= 10 -> output 'C(a=1, ...)'.
     """
@@ -333,7 +335,8 @@ def test_total_limit_not_exceeded():
 
 
 def test_total_limit_drops_to_ellipsis_only():
-    """First item doesn't fit — result is ClassName(...).
+    """
+    First item doesn't fit — result is ClassName(...).
 
     'Name(x=12345)' = 13 chars; total_limit=9 = minimum for 'Name' -> 'Name(...)'.
     """
@@ -345,7 +348,7 @@ def test_total_limit_minimum():
     name = 'A'
     minimum = len(name) + 2  # = 3
     result = describe_data_object(name, (1, 2, 3), {}, total_limit=minimum)
-    
+
     assert result == 'A(...)'
     # Output is longer than total_limit because '...' marker doesn't count.
     assert len(result) > minimum
@@ -362,7 +365,8 @@ def test_total_limit_negative():
 
 
 def test_total_limit_with_item_limit():
-    """item_limit=2 truncates '12345' -> '12...', '1' stays as '1'.
+    """
+    item_limit=2 truncates '12345' -> '12...', '1' stays as '1'.
 
     chunks: ['a=1', 'b=12...'] -> full: 'C(a=1, b=12...)' = 15 chars.
     total_limit=11: k=1 -> 'C(a=1, ...)' = 11 chars <= 11 ✓.
@@ -371,7 +375,8 @@ def test_total_limit_with_item_limit():
 
 
 def test_total_limit_first_item_too_long():
-    """First and only item exceeds total_limit -> 'C(...)'.
+    """
+    First and only item exceeds total_limit -> 'C(...)'.
 
     'C(a=12345)' = 10 chars; total_limit=6 = minimum -> 'C(...)'.
     """
@@ -448,7 +453,8 @@ def test_item_limit_bytes_zero():
 
 
 def test_item_limit_bytes_with_non_ascii():
-    """Non-ASCII bytes: repr uses escape sequences, but limit counts raw bytes.
+    """
+    Non-ASCII bytes: repr uses escape sequences, but limit counts raw bytes.
 
     len(b'\\xff\\xfe') = 2; item_limit=1 -> repr(b'\\xff') + '...'.
     """
@@ -456,7 +462,8 @@ def test_item_limit_bytes_with_non_ascii():
 
 
 def test_item_and_chunk_truncation_coexist():
-    """item_limit truncates '123456' -> '12...'; total_limit then drops 'b=2' chunk.
+    """
+    item_limit truncates '123456' -> '12...'; total_limit then drops 'b=2' chunk.
 
     chunks after item_limit: ['a=12...', 'b=2']; full = 'S(a=12..., b=2)' = 15.
     total_limit=10: content 'S(a=12...)' = 10 <= 10 -> output 'S(a=12..., ...)'.
@@ -491,7 +498,8 @@ def test_item_limit_ellipsis_with_placeholder():
 
 
 def test_total_limit_output_longer_than_limit():
-    """'...' marker doesn't count toward total_limit, so output can exceed total_limit.
+    """
+    '...' marker doesn't count toward total_limit, so output can exceed total_limit.
 
     'C(a=1)' = 7 chars <= total_limit=7; output = 'C(a=1, ...)' = 11 > 7.
     """
@@ -501,7 +509,8 @@ def test_total_limit_output_longer_than_limit():
 
 
 def test_total_limit_ellipsis_not_dropped():
-    """Ellipsis argument is never dropped by total_limit.
+    """
+    Ellipsis argument is never dropped by total_limit.
 
     'C(Ellipsis, x=1)' = 17 chars; small total_limit should drop 'x=1' but keep Ellipsis.
     """
@@ -510,7 +519,8 @@ def test_total_limit_ellipsis_not_dropped():
 
 
 def test_total_limit_ellipsis_other_items_dropped():
-    """Non-Ellipsis items are dropped before Ellipsis.
+    """
+    Non-Ellipsis items are dropped before Ellipsis.
 
     'C(Ellipsis, 1, 2)' = 18 chars.
     Drop '2': content = 'C(Ellipsis, 1)' = 14 chars.
@@ -521,7 +531,8 @@ def test_total_limit_ellipsis_other_items_dropped():
 
 
 def test_total_limit_all_ellipsis():
-    """All arguments are Ellipsis — nothing can be dropped.
+    """
+    All arguments are Ellipsis — nothing can be dropped.
 
     Even if content exceeds total_limit, return full output (Ellipsis exemption).
     """
@@ -530,7 +541,8 @@ def test_total_limit_all_ellipsis():
 
 
 def test_total_limit_ellipsis_pinned_content_exceeds_limit():
-    """Ellipsis + droppable item; even pinned-only content exceeds total_limit.
+    """
+    Ellipsis + droppable item; even pinned-only content exceeds total_limit.
 
     'C(Ellipsis, 1)' = 14 > 3; drop '1': content 'C(Ellipsis)' = 11 > 3 -> fallback.
     Returns pinned-only + '...' regardless of limit.
@@ -540,7 +552,8 @@ def test_total_limit_ellipsis_pinned_content_exceeds_limit():
 
 
 def test_total_limit_ellipsis_mixed_positions():
-    """Ellipsis in the middle — order preserved, non-Ellipsis dropped from the end.
+    """
+    Ellipsis in the middle — order preserved, non-Ellipsis dropped from the end.
 
     'C(1, Ellipsis, 2)' = 18 chars.
     Drop '2': content = 'C(1, Ellipsis)' = 14 chars.
