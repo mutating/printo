@@ -449,12 +449,12 @@ def test_simple_ignore():
 
 
 def test_conditional_expressions():
+    """@repred reads self.a at repr time, which stores the result of the expression."""
     @repred
     class SomeClass:
         def __init__(self, a):
             self.a = a if a else 123
 
-    # @repred reads self.a at repr time, which stores the result of the expression
     assert repr(SomeClass(42)) == 'SomeClass(a=42)'
     assert repr(SomeClass(0)) == 'SomeClass(a=123)'
 
@@ -470,17 +470,18 @@ def test_conditional_expression_reversed():
 
 
 def test_conditional_expression_with_default_value():
+    """When a=None (default), self.a stores 'default', which differs from default None -> shown."""
     @repred
     class SomeClass:
         def __init__(self, a=None):
             self.a = a if a is not None else 'default'
 
-    # When a=None (default), self.a stores 'default', which differs from default None -> shown
     assert repr(SomeClass()) == "SomeClass(a='default')"
     assert repr(SomeClass(42)) == 'SomeClass(a=42)'
 
 
 def test_conditional_expression_multiple_params():
+    """self.a = 0 if 0 else 0 = 0; self.c = 'fallback' if not 0 else 0 = 'fallback'."""
     @repred
     class SomeClass:
         def __init__(self, a, b, c):
@@ -489,7 +490,6 @@ def test_conditional_expression_multiple_params():
             self.c = 'fallback' if not c else c  # noqa: SIM212
 
     assert repr(SomeClass(1, 2, 3)) == 'SomeClass(a=1, b=2, c=3)'
-    # self.a = 0 if 0 else 0 = 0; self.c = 'fallback' if not 0 else 0 = 'fallback'
     assert repr(SomeClass(0, 2, 0)) == "SomeClass(a=0, b=2, c='fallback')"
 
 
@@ -502,7 +502,7 @@ def test_conditional_expression_not_recognized():
 
 
 def test_conditional_expression_nested():
-    # orelse is IfExp -> nested ternary, not supported; self.a not mapped -> error
+    """orelse is IfExp -> nested ternary, not supported; self.a not mapped -> error."""
     with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
         @repred
         class SomeClass:
@@ -512,7 +512,7 @@ def test_conditional_expression_nested():
 
 
 def test_conditional_expression_both_branches_are_params():
-    # Both branches are different params -> AmbiguousMappingError
+    """Both branches are different params -> AmbiguousMappingError."""
     with pytest.raises(AmbiguousMappingError):
         @repred
         class SomeClass:
@@ -637,7 +637,7 @@ def test_ternary_ambiguity_one_getter_missing():
 
 
 def test_ternary_ambiguity_one_ignored():
-    # One param ignored, the other has no getter -> still AmbiguousMappingError
+    """One param ignored, the other has no getter -> still AmbiguousMappingError."""
     with pytest.raises(AmbiguousMappingError):
         @repred(ignore=['a'])
         class SomeClass:
@@ -665,7 +665,7 @@ def test_ternary_ambiguity_one_ignored_one_getter():
 
 
 def test_ternary_same_param_both_branches():
-    # self.a = a if cond else a — both branches same param, not ambiguous
+    """self.a = a if cond else a — both branches same param, not ambiguous."""
     @repred
     class SomeClass:
         def __init__(self, a):
@@ -676,7 +676,7 @@ def test_ternary_same_param_both_branches():
 
 
 def test_nested_ternary_rejected():
-    # body is IfExp -> nested, not supported -> self.a not mapped -> ParameterMappingNotFoundError
+    """body is IfExp -> nested, not supported -> self.a not mapped -> ParameterMappingNotFoundError."""
     with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
         @repred
         class SomeClass:
@@ -687,7 +687,7 @@ def test_nested_ternary_rejected():
 
 
 def test_nested_ternary_in_orelse():
-    # orelse is IfExp -> nested, not supported -> self.a not mapped -> ParameterMappingNotFoundError
+    """orelse is IfExp -> nested, not supported -> self.a not mapped -> ParameterMappingNotFoundError."""
     with pytest.raises(ParameterMappingNotFoundError, match=match('No internal object property or custom getter was found for the parameter a.')):
         @repred
         class SomeClass:
@@ -698,7 +698,7 @@ def test_nested_ternary_in_orelse():
 
 
 def test_nested_ternary_with_getter():
-    # Nested ternary + getter for the unmapped param -> works fine
+    """Nested ternary + getter for the unmapped param -> works fine."""
     @repred(getters={'a': lambda obj: obj.a})
     class SomeClass:
         def __init__(self, a, b):
@@ -709,7 +709,7 @@ def test_nested_ternary_with_getter():
 
 
 def test_init_with_non_name_non_ifexp_assignment():
-    # self.x = 42 is a Constant (not Name, not IfExp) — get_mapping skips it
+    """self.x = 42 is a Constant (not Name, not IfExp) — get_mapping skips it."""
     @repred
     class SomeClass:
         def __init__(self, a):

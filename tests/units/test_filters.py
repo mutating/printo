@@ -2,6 +2,7 @@ from printo import not_none
 
 
 def test_not_none():
+
     assert not_none(None) == False
 
     assert not_none(1) == True

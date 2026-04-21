@@ -9,6 +9,7 @@ from printo.reprs import _get_lambda_symbol, superrepr
 
 
 def test_superrepr_basically_is_repr():
+
     assert superrepr(1) == "1"
     assert superrepr("hello") == "'hello'"
     assert superrepr([1, 2, 3]) == "[1, 2, 3]"
@@ -56,9 +57,10 @@ def test_lambda_symbol_non_unicode_terminal():
 
 
 def test_superrepr_for_lambda_on_non_unicode_terminal():
-    # When stdout encoding can't represent λ, superrepr must return '<lambda>'.
-    # Two lambdas on one line guarantee UncertaintyWithLambdasError on any Python version,
-    # so the encoding fallback is always reached.
+    """When stdout encoding can't represent λ, superrepr must return '<lambda>'.
+    Two lambdas on one line guarantee UncertaintyWithLambdasError on any Python version,
+    so the encoding fallback is always reached.
+    """
     result = run(
         sys.executable, '-c',
         'from printo import superrepr; f = [lambda x: x, lambda y: y][0]; print(superrepr(f))',
@@ -72,8 +74,9 @@ def test_superrepr_for_lambda_on_non_unicode_terminal():
 
 @pytest.mark.skipif(sys.version_info >= (3, 13), reason='Python 3.13+ can introspect -c lambdas')
 def test_superrepr_for_lambda_without_source_old_python():
-    # On Python < 3.13, source of a lambda defined in -c is not retrievable.
-    # getclearsource raises OSError, and superrepr must fall back to 'λ'.
+    """On Python < 3.13, source of a lambda defined in -c is not retrievable.
+    getclearsource raises OSError, and superrepr must fall back to 'λ'.
+    """
     result = run(
         sys.executable, '-c',
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
@@ -87,8 +90,9 @@ def test_superrepr_for_lambda_without_source_old_python():
 
 @pytest.mark.skipif(sys.version_info < (3, 13), reason='Python < 3.13 cannot introspect -c lambdas')
 def test_superrepr_for_lambda_without_source_new_python():
-    # On Python 3.13+, source introspection for -c lambdas works,
-    # so superrepr returns the actual source code.
+    """On Python 3.13+, source introspection for -c lambdas works,
+    so superrepr returns the actual source code.
+    """
     result = run(
         sys.executable, '-c',
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
