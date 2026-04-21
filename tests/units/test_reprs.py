@@ -2,7 +2,7 @@ import functools
 import sys
 
 import pytest
-from suby import run  # type: ignore[import-not-found]
+from suby import run
 
 from printo.reprs import superrepr
 
