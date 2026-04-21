@@ -1,13 +1,15 @@
 import functools
+import io
 import sys
 
 import pytest
 from suby import run
 
-from printo.reprs import superrepr
+from printo.reprs import get_lambda_symbol, superrepr
 
 
 def test_superrepr_basically_is_repr():
+
     assert superrepr(1) == "1"
     assert superrepr("hello") == "'hello'"
     assert superrepr([1, 2, 3]) == "[1, 2, 3]"
@@ -39,10 +41,46 @@ def test_superrepr_for_lambda_functions_when_they_are_multple_in_one_line():
     assert superrepr(lambdas[1]) == "λ"
 
 
+def test_lambda_symbol_unicode_terminal():
+    assert get_lambda_symbol() == 'λ'
+
+
+def test_lambda_symbol_non_unicode_terminal():
+    original_stdout = sys.stdout
+    sys.stdout = io.TextIOWrapper(io.BytesIO(), encoding='ascii')
+    try:
+        get_lambda_symbol.cache_clear()
+        assert get_lambda_symbol() == '<lambda>'
+    finally:
+        sys.stdout = original_stdout
+        get_lambda_symbol.cache_clear()
+
+
+def test_superrepr_for_lambda_on_non_unicode_terminal():
+    """
+    When stdout encoding can't represent λ, superrepr must return '<lambda>'.
+
+    Two lambdas on one line guarantee UncertaintyWithLambdasError on any Python version,
+    so the encoding fallback is always reached.
+    """
+    result = run(
+        sys.executable, '-c',
+        'from printo import superrepr; f = [lambda x: x, lambda y: y][0]; print(superrepr(f))',
+        catch_output=True,
+        split=False,
+        add_env={'PYTHONIOENCODING': 'ascii', 'PYTHONUTF8': '0'},
+    )
+
+    assert result.stdout.strip() == '<lambda>', f'stdout={result.stdout!r} stderr={result.stderr!r}'
+
+
 @pytest.mark.skipif(sys.version_info >= (3, 13), reason='Python 3.13+ can introspect -c lambdas')
 def test_superrepr_for_lambda_without_source_old_python():
-    # On Python < 3.13, source of a lambda defined in -c is not retrievable.
-    # getclearsource raises OSError, and superrepr must fall back to 'λ'.
+    """
+    On Python < 3.13, source of a lambda defined in -c is not retrievable.
+
+    getclearsource raises OSError, and superrepr must fall back to 'λ'.
+    """
     result = run(
         sys.executable, '-c',
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
@@ -56,8 +94,7 @@ def test_superrepr_for_lambda_without_source_old_python():
 
 @pytest.mark.skipif(sys.version_info < (3, 13), reason='Python < 3.13 cannot introspect -c lambdas')
 def test_superrepr_for_lambda_without_source_new_python():
-    # On Python 3.13+, source introspection for -c lambdas works,
-    # so superrepr returns the actual source code.
+    """On Python 3.13+, source introspection for -c lambdas works, so superrepr returns the actual source code."""
     result = run(
         sys.executable, '-c',
         'from printo import superrepr; print(superrepr(lambda value, extra: False))',
@@ -174,3 +211,24 @@ def test_superrepr_for_object_with_broken_repr_and_broken_type():
             raise RuntimeError("repr is broken")
 
     assert superrepr(BrokenEverything()) == "<unprintable>"
+
+
+def test_superrepr_for_class_with_broken_name():
+    """
+    When __name__ raises, superrepr falls through to repr().
+
+    type.__repr__ reads the class name via the C-level tp_name slot, bypassing
+    Python-level __getattribute__, so repr() succeeds and returns the standard
+    class repr string like "<class '...BadNameClass'>".
+    """
+    class BadNameMeta(type):
+        def __getattribute__(cls, name: str) -> object:
+            if name == '__name__':
+                raise RuntimeError('broken __name__')
+            return super().__getattribute__(name)
+
+    class BadNameClass(metaclass=BadNameMeta):
+        pass
+
+    assert superrepr(BadNameClass) == "<class 'tests.units.test_reprs.test_superrepr_for_class_with_broken_name.<locals>.BadNameClass'>"
+    assert superrepr(BadNameClass) == repr(BadNameClass)

@@ -1,34 +1,39 @@
 import functools
+import sys
 from inspect import isclass, isfunction, ismethod
 from typing import Any
 
 from getsources import UncertaintyWithLambdasError, getclearsource
 
 
+@functools.lru_cache(maxsize=None)
+def get_lambda_symbol() -> str:
+    try:
+        'λ'.encode(sys.stdout.encoding or 'utf-8')
+        return 'λ'
+    except UnicodeEncodeError:
+        return '<lambda>'
+
+
 def superrepr(value: Any) -> str:  # noqa: PLR0911
-    if isfunction(value):
-        result = value.__name__
+    if isfunction(value) or ismethod(value) or isclass(value):
+        try:
+            result = value.__name__
+        except Exception:  # noqa: BLE001
+            pass
+        else:
+            if isfunction(value) and result == '<lambda>':
+                try:
+                    return getclearsource(value)
+                except (UncertaintyWithLambdasError, OSError):
+                    return get_lambda_symbol()
 
-        if result == '<lambda>':
-            try:
-                return getclearsource(value)
-            except (UncertaintyWithLambdasError, OSError):
-                return 'λ'
+            return result
 
-        return result
+    elif isinstance(value, functools.partial):
+        from printo.describe import describe_data_object  # noqa: PLC0415
 
-    if ismethod(value):
-        return value.__name__
-
-    if isclass(value):
-        return value.__name__
-
-    if isinstance(value, functools.partial):
-        func_repr = superrepr(value.func)
-        parts = [func_repr]
-        parts.extend(superrepr(arg) for arg in value.args)
-        parts.extend(f'{k}={superrepr(v)}' for k, v in value.keywords.items())
-        return f'functools.partial({", ".join(parts)})'
+        return describe_data_object('functools.partial', (value.func, *value.args), value.keywords)
 
     try:
         return repr(value)
