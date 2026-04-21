@@ -264,3 +264,259 @@ def test_async_function_as_argument():
 
     assert describe_data_object('ClassName', (function,), {}) == 'ClassName(function)'
     assert describe_data_object('ClassName', (), {'function': function}) == 'ClassName(function=function)'
+
+
+def test_broken_repr_as_argument():
+    class BrokenRepr:
+        def __repr__(self):
+            raise RuntimeError("repr is broken")
+
+    broken = BrokenRepr()
+    assert describe_data_object('ClassName', (broken,), {}) == "ClassName(<BrokenRepr's object>)"
+    assert describe_data_object('ClassName', (), {'x': broken}) == "ClassName(x=<BrokenRepr's object>)"
+    assert describe_data_object('ClassName', (1, broken, 2), {'x': broken}) == "ClassName(1, <BrokenRepr's object>, 2, x=<BrokenRepr's object>)"
+
+
+def test_item_limit_basic():
+    # superrepr(12345) = '12345' (5 chars); item_limit=2 -> '12...'
+    assert describe_data_object('C', (12345,), {}, item_limit=2) == 'C(12...)'
+    assert describe_data_object('C', (), {'x': 12345}, item_limit=2) == 'C(x=12...)'
+
+
+def test_item_limit_not_exceeded():
+    # '12345' has 5 chars; item_limit=5 -> no truncation
+    assert describe_data_object('C', (12345,), {}, item_limit=5) == 'C(12345)'
+    # item_limit=4 -> '1234...'
+    assert describe_data_object('C', (12345,), {}, item_limit=4) == 'C(1234...)'
+
+
+def test_item_limit_zero():
+    # item_limit=0 -> value fully replaced with '...'
+    assert describe_data_object('C', (12345,), {}, item_limit=0) == 'C(...)'
+    assert describe_data_object('C', (), {'x': 12345}, item_limit=0) == 'C(x=...)'
+
+
+def test_item_limit_with_kwargs():
+    # limit applies only to the value part, not to 'key=value' as a whole
+    assert describe_data_object('C', (), {'key': 12345}, item_limit=2) == 'C(key=12...)'
+
+
+def test_item_limit_negative():
+    with pytest.raises(ValueError, match='item_limit must be a non-negative integer'):
+        describe_data_object('C', (1,), {}, item_limit=-1)
+
+
+def test_item_limit_with_placeholder():
+    # item_limit applies to placeholder strings too
+    assert describe_data_object('C', (1,), {}, item_limit=2, placeholders={0: 'secret'}) == 'C(se...)'
+
+
+def test_item_limit_with_placeholder_not_exceeded():
+    # placeholder shorter than item_limit — no truncation
+    assert describe_data_object('C', (1,), {}, item_limit=10, placeholders={0: 'ok'}) == 'C(ok)'
+
+
+def test_total_limit_basic():
+    # 'C(a=1, b=2, c=3)' = 16 chars; total_limit=10
+    # content 'C(a=1, b=2)' = 11 > 10; content 'C(a=1)' = 7 <= 10 -> output 'C(a=1, ...)'
+    assert describe_data_object('C', (), {'a': 1, 'b': 2, 'c': 3}, total_limit=10) == 'C(a=1, ...)'
+
+
+def test_total_limit_not_exceeded():
+    result = describe_data_object('C', (1, 2), {}, total_limit=100)
+    assert result == 'C(1, 2)'
+    assert len(result) <= 100
+
+
+def test_total_limit_drops_to_ellipsis_only():
+    # First item doesn't fit — result is ClassName(...)
+    # 'Name(x=12345)' = 13 chars; total_limit=9 = minimum for 'Name' -> 'Name(...)'
+    assert describe_data_object('Name', (), {'x': 12345}, total_limit=9) == 'Name(...)'
+
+
+def test_total_limit_minimum():
+    # Minimum is len(class_name) + 2; the actual output 'A(...)' may be longer
+    name = 'A'
+    minimum = len(name) + 2  # = 3
+    result = describe_data_object(name, (1, 2, 3), {}, total_limit=minimum)
+    assert result == 'A(...)'
+    # Output is longer than total_limit because '...' marker doesn't count
+    assert len(result) > minimum
+
+
+def test_total_limit_too_small():
+    with pytest.raises(ValueError, match='total_limit'):
+        describe_data_object('ClassName', (1,), {}, total_limit=5)
+
+
+def test_total_limit_negative():
+    with pytest.raises(ValueError, match='total_limit must be a non-negative integer'):
+        describe_data_object('C', (1,), {}, total_limit=-1)
+
+
+def test_total_limit_with_item_limit():
+    # item_limit=2 truncates '12345' -> '12...', '1' stays as '1'
+    # chunks: ['a=1', 'b=12...'] -> full: 'C(a=1, b=12...)' = 15 chars
+    # total_limit=11: k=1 -> 'C(a=1, ...)' = 11 chars <= 11 ✓
+    assert describe_data_object('C', (), {'a': 1, 'b': 12345}, item_limit=2, total_limit=11) == 'C(a=1, ...)'
+
+
+def test_total_limit_first_item_too_long():
+    # First and only item exceeds total_limit -> 'C(...)'
+    # 'C(a=12345)' = 10 chars; total_limit=6 = minimum -> 'C(...)'
+    assert describe_data_object('C', (), {'a': 12345}, total_limit=6) == 'C(...)'
+
+
+def test_total_limit_exact_fit():
+    # 'A(1, 2, 3)' = 10 chars; total_limit=10 -> no truncation
+    result = describe_data_object('A', (1, 2, 3), {})
+    assert result == 'A(1, 2, 3)'
+    assert describe_data_object('A', (1, 2, 3), {}, total_limit=len(result)) == result
+
+
+def test_item_limit_string_basic():
+    # len('hello world') = 11 > 5; truncate to 5 raw chars -> repr('hello') + '...'
+    assert describe_data_object('C', ('hello world',), {}, item_limit=5) == "C('hello'...)"
+    assert describe_data_object('C', (), {'name': 'hello world'}, item_limit=5) == "C(name='hello'...)"
+
+
+def test_item_limit_string_exact_boundary():
+    # len('abc') = 3 == item_limit=3 -> no truncation
+    assert describe_data_object('C', ('abc',), {}, item_limit=3) == "C('abc')"
+
+
+def test_item_limit_string_one_over():
+    # len('abcd') = 4 > item_limit=3 -> repr('abc') + '...'
+    assert describe_data_object('C', ('abcd',), {}, item_limit=3) == "C('abc'...)"
+
+
+def test_item_limit_string_zero():
+    # item_limit=0: any non-empty string -> repr('') + '...' = "''" + '...'
+    assert describe_data_object('C', ('abc',), {}, item_limit=0) == "C(''...)"
+
+
+def test_item_limit_string_not_exceeded():
+    # len('hi') = 2; item_limit=2 -> no truncation; item_limit=3 -> also no truncation
+    assert describe_data_object('C', ('hi',), {}, item_limit=2) == "C('hi')"
+    assert describe_data_object('C', ('hi',), {}, item_limit=3) == "C('hi')"
+
+
+def test_item_limit_string_with_escape_chars():
+    # 'a\nb' has len=3 ('\n' is 1 raw char); item_limit=2 -> repr('a\n') + '...'
+    assert describe_data_object('C', ('a\nb',), {}, item_limit=2) == "C('a\\n'...)"
+
+
+def test_item_limit_string_kwargs():
+    # Truncation by raw length applies to kwargs values too
+    assert describe_data_object('C', (), {'name': 'abcdef'}, item_limit=2) == "C(name='ab'...)"
+
+
+def test_item_limit_string_custom_serializer():
+    # Custom serializer: result doesn't equal repr(value), so generic truncation applies
+    assert describe_data_object('C', ('hello',), {}, serializer=lambda x: str(x), item_limit=3) == 'C(hel...)'
+
+
+def test_item_limit_bytes_basic():
+    # len(b'hello world') = 11 > 5; truncate to 5 raw bytes -> repr(b'hello') + '...'
+    assert describe_data_object('C', (b'hello world',), {}, item_limit=5) == "C(b'hello'...)"
+
+
+def test_item_limit_bytes_exact_boundary():
+    # len(b'abc') = 3 == item_limit=3 -> no truncation
+    assert describe_data_object('C', (b'abc',), {}, item_limit=3) == "C(b'abc')"
+
+
+def test_item_limit_bytes_one_over():
+    # len(b'abcd') = 4 > item_limit=3 -> repr(b'abc') + '...'
+    assert describe_data_object('C', (b'abcd',), {}, item_limit=3) == "C(b'abc'...)"
+
+
+def test_item_limit_bytes_zero():
+    # item_limit=0: any non-empty bytes -> repr(b'') + '...'
+    assert describe_data_object('C', (b'abc',), {}, item_limit=0) == "C(b''...)"
+
+
+def test_item_limit_bytes_with_non_ascii():
+    # Non-ASCII bytes: repr uses escape sequences, but limit counts raw bytes
+    # len(b'\xff\xfe') = 2; item_limit=1 -> repr(b'\xff') + '...'
+    assert describe_data_object('C', (b'\xff\xfe',), {}, item_limit=1) == "C(b'\\xff'...)"
+
+
+def test_item_and_chunk_truncation_coexist():
+    # item_limit truncates '123456' -> '12...'; total_limit then drops 'b=2' chunk
+    # chunks after item_limit: ['a=12...', 'b=2']; full = 'S(a=12..., b=2)' = 15
+    # total_limit=10: content 'S(a=12...)' = 10 <= 10 -> output 'S(a=12..., ...)'
+    result = describe_data_object('S', (), {'a': 123456, 'b': 2}, item_limit=2, total_limit=10)
+    assert result == 'S(a=12..., ...)'
+
+
+def test_chunk_truncation_preserves_comma():
+    # When k>0, output includes ', ...' (comma before ellipsis)
+    result = describe_data_object('C', (), {'a': 1, 'b': 2}, total_limit=7)
+    assert result == 'C(a=1, ...)'
+    assert ', ...' in result
+
+
+def test_chunk_truncation_no_comma_when_all_dropped():
+    # When all chunks dropped (k==0), output is 'ClassName(...)' without comma
+    result = describe_data_object('C', (), {'a': 12345}, total_limit=3)
+    assert result == 'C(...)'
+    assert ', ...' not in result
+
+
+def test_item_limit_ellipsis_not_truncated():
+    # Ellipsis value is never truncated by item_limit
+    assert describe_data_object('C', (...,), {}, item_limit=1) == 'C(Ellipsis)'
+    assert describe_data_object('C', (...,), {}, item_limit=0) == 'C(Ellipsis)'
+
+
+def test_item_limit_ellipsis_with_placeholder():
+    # Placeholder for Ellipsis is still subject to item_limit
+    assert describe_data_object('C', (...,), {}, item_limit=2, placeholders={0: 'secret'}) == 'C(se...)'
+
+
+def test_total_limit_output_longer_than_limit():
+    # '...' marker doesn't count toward total_limit, so output can exceed total_limit
+    # 'C(a=1)' = 7 chars <= total_limit=7; output = 'C(a=1, ...)' = 11 > 7
+    result = describe_data_object('C', (), {'a': 1, 'b': 2}, total_limit=7)
+    assert result == 'C(a=1, ...)'
+    assert len(result) > 7
+
+
+def test_total_limit_ellipsis_not_dropped():
+    # Ellipsis argument is never dropped by total_limit
+    # 'C(Ellipsis, x=1)' = 17 chars; small total_limit should drop 'x=1' but keep Ellipsis
+    result = describe_data_object('C', (...,), {'x': 1}, total_limit=13)
+    assert result == 'C(Ellipsis, ...)'
+
+
+def test_total_limit_ellipsis_other_items_dropped():
+    # Non-Ellipsis items are dropped before Ellipsis
+    # 'C(Ellipsis, 1, 2)' = 18 chars
+    # Drop '2': content = 'C(Ellipsis, 1)' = 14 chars
+    # Drop '1': content = 'C(Ellipsis)' = 11 chars
+    result = describe_data_object('C', (..., 1, 2), {}, total_limit=11)
+    assert result == 'C(Ellipsis, ...)'
+
+
+def test_total_limit_all_ellipsis():
+    # All arguments are Ellipsis — nothing can be dropped
+    # Even if content exceeds total_limit, return full output (Ellipsis exemption)
+    result = describe_data_object('C', (..., ...), {}, total_limit=3)
+    assert result == 'C(Ellipsis, Ellipsis)'
+
+
+def test_total_limit_ellipsis_pinned_content_exceeds_limit():
+    # Ellipsis + droppable item; even pinned-only content exceeds total_limit
+    # 'C(Ellipsis, 1)' = 14 > 3; drop '1': content 'C(Ellipsis)' = 11 > 3 -> fallback
+    # Returns pinned-only + '...' regardless of limit
+    result = describe_data_object('C', (..., 1), {}, total_limit=3)
+    assert result == 'C(Ellipsis, ...)'
+
+
+def test_total_limit_ellipsis_mixed_positions():
+    # Ellipsis in the middle — order preserved, non-Ellipsis dropped from the end
+    # 'C(1, Ellipsis, 2)' = 18 chars
+    # Drop '2': content = 'C(1, Ellipsis)' = 14 chars
+    result = describe_data_object('C', (1, ..., 2), {}, total_limit=14)
+    assert result == 'C(1, Ellipsis, ...)'

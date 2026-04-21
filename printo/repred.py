@@ -1,4 +1,4 @@
-from ast import Assign, Attribute, Name, parse
+from ast import Assign, Attribute, IfExp, Name, parse
 from functools import partial
 from inspect import Parameter, Signature, getattr_static, isclass, signature
 from typing import (
@@ -8,6 +8,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     Union,
@@ -19,6 +20,7 @@ from getsources import getclearsource
 
 from printo import describe_data_object
 from printo.errors import (
+    AmbiguousMappingError,
     CanNotBePositionalError,
     ParameterMappingNotFoundError,
     RedefinitionError,
@@ -26,11 +28,11 @@ from printo.errors import (
 
 ClassType = TypeVar('ClassType', bound=Type[Any])
 
-def get_mapping(cls: ClassType) -> Dict[str, str]:
+def get_mapping(cls: ClassType) -> Tuple[Dict[str, str], List[Tuple[str, str, str]]]:
     try:
         source = getclearsource(cls.__init__)
     except TypeError:
-        return {}
+        return {}, []
 
     tree = parse(source)
 
@@ -42,12 +44,30 @@ def get_mapping(cls: ClassType) -> Dict[str, str]:
         except IndexError as e:
             raise ParameterMappingNotFoundError(f'It seems that the "self" argument was not found for the __init__ method of class {cls.__name__}.') from e
 
-    results = {}
+    results: Dict[str, str] = {}
+    ambiguities: List[Tuple[str, str, str]] = []
     for node in tree.body[0].body:  # type: ignore[attr-defined]
-        if isinstance(node, Assign) and len(node.targets) == 1 and isinstance(node.targets[0], Attribute) and isinstance(node.targets[0].value, Name) and node.targets[0].value.id == self_name and isinstance(node.value, Name):
-            results[node.value.id] = node.targets[0].attr
+        if isinstance(node, Assign) and len(node.targets) == 1 and isinstance(node.targets[0], Attribute) and isinstance(node.targets[0].value, Name) and node.targets[0].value.id == self_name:
+            attr_name = node.targets[0].attr
+            if isinstance(node.value, Name):
+                results[node.value.id] = attr_name
+            elif isinstance(node.value, IfExp):
+                if isinstance(node.value.body, IfExp) or isinstance(node.value.orelse, IfExp):
+                    pass  # Nested ternaries are not supported — skip
+                else:
+                    body_is_param = isinstance(node.value.body, Name) and node.value.body.id != self_name
+                    orelse_is_param = isinstance(node.value.orelse, Name) and node.value.orelse.id != self_name
+                    if body_is_param and orelse_is_param and node.value.body.id != node.value.orelse.id:  # type: ignore[attr-defined]
+                        ambiguities.append((node.value.body.id, node.value.orelse.id, attr_name))  # type: ignore[attr-defined]
+                    elif body_is_param and orelse_is_param:
+                        # Both branches are the same parameter — not ambiguous
+                        results[node.value.body.id] = attr_name  # type: ignore[attr-defined]
+                    elif body_is_param:
+                        results[node.value.body.id] = attr_name  # type: ignore[attr-defined]
+                    elif orelse_is_param:
+                        results[node.value.orelse.id] = attr_name  # type: ignore[attr-defined]
 
-    return results
+    return results, ambiguities
 
 
 @overload
@@ -106,7 +126,19 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
         positionals = []
     positionals_to_compare = set(positionals)
 
-    names_mapping = get_mapping(cls)
+    names_mapping, ambiguities = get_mapping(cls)
+
+    for param1, param2, attr_name in ambiguities:
+        unresolved = [
+            parameter_name for parameter_name in (param1, param2)
+            if parameter_name not in default_getters and parameter_name not in ignored_parameters
+        ]
+        if unresolved:
+            raise AmbiguousMappingError(
+                f'Ternary expression in assignment to self.{attr_name} uses two different parameters '
+                f'({param1}, {param2}), making it ambiguous which parameter value will be stored. '
+                f'Provide custom getters for both parameters to resolve this.',
+            )
 
     positional_getters = {}
     keyword_getters = {}
