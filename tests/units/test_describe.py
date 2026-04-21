@@ -311,6 +311,11 @@ def test_item_limit_with_placeholder():
     assert describe_data_object('C', (1,), {}, item_limit=2, placeholders={0: 'secret'}) == 'C(se...)'
 
 
+def test_item_limit_with_placeholder_not_exceeded():
+    # placeholder shorter than item_limit — no truncation
+    assert describe_data_object('C', (1,), {}, item_limit=10, placeholders={0: 'ok'}) == 'C(ok)'
+
+
 def test_total_limit_basic():
     # 'C(a=1, b=2, c=3)' = 16 chars; total_limit=10
     # content 'C(a=1, b=2)' = 11 > 10; content 'C(a=1)' = 7 <= 10 -> output 'C(a=1, ...)'

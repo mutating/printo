@@ -706,3 +706,14 @@ def test_nested_ternary_with_getter():
             self.b = b
 
     assert repr(SomeClass(1, 2)) == 'SomeClass(a=1, b=2)'
+
+
+def test_init_with_non_name_non_ifexp_assignment():
+    # self.x = 42 is a Constant (not Name, not IfExp) — get_mapping skips it
+    @repred
+    class SomeClass:
+        def __init__(self, a):
+            self.x = 42
+            self.a = a
+
+    assert repr(SomeClass(1)) == 'SomeClass(a=1)'
