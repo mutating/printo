@@ -5,7 +5,7 @@ import sys
 import pytest
 from suby import run
 
-from printo.reprs import _get_lambda_symbol, superrepr
+from printo.reprs import get_lambda_symbol, superrepr
 
 
 def test_superrepr_basically_is_repr():
@@ -42,18 +42,18 @@ def test_superrepr_for_lambda_functions_when_they_are_multple_in_one_line():
 
 
 def test_lambda_symbol_unicode_terminal():
-    assert _get_lambda_symbol() == 'λ'
+    assert get_lambda_symbol() == 'λ'
 
 
 def test_lambda_symbol_non_unicode_terminal():
     original_stdout = sys.stdout
     sys.stdout = io.TextIOWrapper(io.BytesIO(), encoding='ascii')
     try:
-        _get_lambda_symbol.cache_clear()
-        assert _get_lambda_symbol() == '<lambda>'
+        get_lambda_symbol.cache_clear()
+        assert get_lambda_symbol() == '<lambda>'
     finally:
         sys.stdout = original_stdout
-        _get_lambda_symbol.cache_clear()
+        get_lambda_symbol.cache_clear()
 
 
 def test_superrepr_for_lambda_on_non_unicode_terminal():

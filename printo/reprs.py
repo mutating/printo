@@ -7,7 +7,7 @@ from getsources import UncertaintyWithLambdasError, getclearsource
 
 
 @functools.lru_cache(maxsize=None)
-def _get_lambda_symbol() -> str:
+def get_lambda_symbol() -> str:
     try:
         'λ'.encode(sys.stdout.encoding or 'utf-8')
         return 'λ'
@@ -26,7 +26,7 @@ def superrepr(value: Any) -> str:  # noqa: PLR0911
                 try:
                     return getclearsource(value)
                 except (UncertaintyWithLambdasError, OSError):
-                    return _get_lambda_symbol()
+                    return get_lambda_symbol()
 
             return result
 
