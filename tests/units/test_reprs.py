@@ -47,7 +47,7 @@ def test_superrepr_for_lambda_without_source():
         split=False,
     )
 
-    assert result.stdout.strip() == 'λ'
+    assert result.stdout.strip() == 'λ', f'stdout={result.stdout!r} stderr={result.stderr!r}'
 
 
 def test_superrepr_for_async_function():
