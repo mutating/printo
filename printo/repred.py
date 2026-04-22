@@ -9,7 +9,6 @@ from typing import (
     List,
     Optional,
     Tuple,
-    Type,
     TypeVar,
     Union,
     cast,
@@ -26,11 +25,11 @@ from printo.errors import (
     RedefinitionError,
 )
 
-ClassType = TypeVar('ClassType', bound=Type[Any])
+ClassType = TypeVar('ClassType', bound=type)
 
-def get_mapping(cls: ClassType) -> Tuple[Dict[str, str], List[Tuple[str, str, str]]]:
+def get_mapping(cls: type) -> Tuple[Dict[str, str], List[Tuple[str, str, str]]]:
     try:
-        source = getclearsource(cls.__init__)
+        source = getclearsource(cls.__init__)  # type: ignore[misc]
     except TypeError:
         return {}, []
 
@@ -71,14 +70,14 @@ def get_mapping(cls: ClassType) -> Tuple[Dict[str, str], List[Tuple[str, str, st
 
 
 @overload
-def repred(*, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Callable[[ClassType], ClassType]:
+def repred(*, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[Any], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Callable[[ClassType], ClassType]:
     ...  # pragma: no cover
 
 @overload
 def repred(cls: ClassType, /) -> ClassType:
     ...  # pragma: no cover
 
-def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[ClassType], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915, PLR0913
+def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qualname: bool = False, getters: Optional[Dict[str, Callable[[Any], Any]]] = None, filters: Optional[Dict[Union[str, int], Callable[[Any], bool]]] = None, ignore: Optional[List[str]] = None, positionals: Optional[List[str]] = None) -> Union[ClassType, Callable[[ClassType], ClassType]]:  # noqa: PLR0915, PLR0913
     from sigmatch import (  # noqa: PLC0415
         PossibleCallMatcher,
         SignatureMismatchError,
@@ -210,7 +209,7 @@ def repred(cls: Optional[ClassType] = None, prefer_positional: bool = False, qua
     if parameters_not_found:
         raise ParameterMappingNotFoundError(f'No internal object {"properties" if len(parameters_not_found) > 1 else "property"} or custom {"getters" if len(parameters_not_found) > 1 else "getter"} {"were" if len(parameters_not_found) > 1 else "was"} found for the {"parameters" if len(parameters_not_found) > 1 else "parameter"} {", ".join(parameters_not_found)}.')
 
-    def __repr__(self: ClassType) -> str:  # noqa: N807
+    def __repr__(self: Any) -> str:  # noqa: N807
         positionals = []
         for name, getter in positional_getters.items():
             value = default_getters[name](self) if name in default_getters else getter(self)
