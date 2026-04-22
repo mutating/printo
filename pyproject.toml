@@ -12,7 +12,7 @@ description = 'Print objects with data beautifully'
 readme = 'README.md'
 requires-python = '>=3.8'
 dependencies = [
-    'sigmatch>=0.0.9',
+    'sigmatch>=0.0.10',
     'getsources>=0.0.4',
 ]
 classifiers = [
