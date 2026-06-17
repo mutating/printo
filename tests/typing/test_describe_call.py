@@ -54,8 +54,9 @@ def test_describe_call_with_total_limit():
 
 @pytest.mark.mypy_testing
 def test_describe_call_invalid_class_name_type():
-    """mypy rejects int as class_name — expected str."""
-    describe_call(42, [], {})  # E: [arg-type]
+    """mypy and runtime validation both reject non-string class_name values."""
+    with pytest.raises(TypeError, match=match('class_name must be a string, got int.')):
+        describe_call(42, [], {})  # E: [arg-type]
 
 
 @pytest.mark.mypy_testing

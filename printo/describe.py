@@ -1,3 +1,4 @@
+from keyword import iskeyword
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from printo.reprs import superrepr
@@ -62,6 +63,16 @@ def describe_call(  # noqa: PLR0913
     total_limit: Optional[int] = None,
 ) -> str:
     from sigmatch import PossibleCallMatcher  # noqa: PLC0415
+
+    if not isinstance(class_name, str):
+        raise TypeError(f'class_name must be a string, got {type(class_name).__name__}.')
+
+    for part in class_name.split('.'):
+        identifier = part[1:-1] if part.startswith('<') and part.endswith('>') else part
+        if not identifier.isidentifier():
+            raise ValueError(f'class_name must be a valid Python identifier, a valid Python identifier wrapped in angle brackets, or a dot-separated series of those, got {class_name!r}.')
+        if iskeyword(identifier):
+            raise ValueError(f'class_name contains Python keyword {identifier!r}, which is not allowed: {class_name!r}.')
 
     PossibleCallMatcher('.').match(serializer, raise_exception=True)
 
