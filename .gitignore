@@ -12,3 +12,4 @@ build
 html
 .coverage
 CLAUDE.md
+AGENTS.md
