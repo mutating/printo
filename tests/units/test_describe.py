@@ -1,6 +1,7 @@
 from typing import Any
 
 import pytest
+from full_match import match
 from sigmatch.errors import SignatureMismatchError
 
 from printo import describe_call, not_none
@@ -9,6 +10,87 @@ from printo import describe_call, not_none
 def test_empty_object():
     assert describe_call('ClassName', (), {}) == 'ClassName()'
     assert describe_call('ClassName', (), {}, serializer=lambda x: 'kek') == 'ClassName()'  # noqa: ARG005
+
+
+@pytest.mark.parametrize(
+    ('class_name', 'type_name'),
+    [
+        (42, 'int'),
+        (None, 'NoneType'),
+        (object(), 'object'),
+    ],
+)
+def test_class_name_must_be_string(class_name, type_name):
+    """Only strings can be used as the name in the described call."""
+    with pytest.raises(TypeError, match=match(f'class_name must be a string, got {type_name}.')):
+        describe_call(class_name, (), {})
+
+
+@pytest.mark.parametrize(
+    'class_name',
+    [
+        'ClassName',
+        '_private',
+        'package.module.ClassName',
+        '<locals>',
+        'function.<locals>.SomeClass',
+        'package.<private>.ClassName',
+    ],
+)
+def test_class_name_accepts_valid_identifiers_and_wrapped_identifiers(class_name):
+    """
+    Class names can be identifiers or <identifier> chunks.
+
+    Multiple valid chunks can be joined with dots.
+    """
+    assert describe_call(class_name, (), {}) == f'{class_name}()'
+
+
+@pytest.mark.parametrize(
+    'class_name',
+    [
+        '',
+        'not valid',
+        '123abc',
+        'a-b',
+        '<',
+        '>',
+        '<>',
+        '<123abc>',
+        '<not valid>',
+        '<a-b>',
+        '<locals',
+        'locals>',
+        '.',
+        '.ClassName',
+        'package.',
+        'package..ClassName',
+        'package.123Class',
+        'function.<>.Class',
+        'function.<not valid>.Class',
+    ],
+)
+def test_class_name_rejects_invalid_identifier_shapes(class_name):
+    """Malformed names are rejected before any repr string is produced."""
+    with pytest.raises(ValueError, match=match(f'class_name must be a valid Python identifier, a valid Python identifier wrapped in angle brackets, or a dot-separated series of those, got {class_name!r}.')):
+        describe_call(class_name, (), {})
+
+
+@pytest.mark.parametrize(
+    ('class_name', 'keyword'),
+    [
+        ('class', 'class'),
+        ('None', 'None'),
+        ('package.class', 'class'),
+        ('<class>', 'class'),
+        ('<None>', 'None'),
+        ('function.<class>.SomeClass', 'class'),
+    ],
+)
+def test_class_name_rejects_python_keywords(class_name, keyword):
+    """Python keywords are rejected even when their identifier shape is valid."""
+    with pytest.raises(ValueError, match=match(f'class_name contains Python keyword {keyword!r}, which is not allowed: {class_name!r}.')):
+        describe_call(class_name, (), {})
 
 
 @pytest.mark.parametrize(
