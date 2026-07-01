@@ -7,23 +7,43 @@ from sigmatch.errors import SignatureMismatchError
 from printo import describe_call, not_none
 
 
+def _function():
+    pass
+
+
+class _ClassNameContainer:
+    class Inner:
+        pass
+
+
 def test_empty_object():
+    """
+    Empty calls are rendered for literal names and class objects.
+
+    Class objects render __name__, not __qualname__.
+    """
+    class Outer:
+        class Inner:
+            pass
+
     assert describe_call('ClassName', (), {}) == 'ClassName()'
     assert describe_call('ClassName', (), {}, serializer=lambda x: 'kek') == 'ClassName()'  # noqa: ARG005
+    assert describe_call(Outer.Inner, (), {}) == 'Inner()'
 
 
 @pytest.mark.parametrize(
-    ('class_name', 'type_name'),
+    ('class_or_name', 'type_name'),
     [
         (42, 'int'),
         (None, 'NoneType'),
         (object(), 'object'),
+        (_function, 'function'),
     ],
 )
-def test_class_name_must_be_string(class_name, type_name):
-    """Only strings can be used as the name in the described call."""
-    with pytest.raises(TypeError, match=match(f'class_name must be a string, got {type_name}.')):
-        describe_call(class_name, (), {})
+def test_class_or_name_must_be_string_or_class(class_or_name, type_name):
+    """The call name source must be either a string or a class object."""
+    with pytest.raises(TypeError, match=match(f'class_or_name must be a class name string or a class, got {type_name}.')):
+        describe_call(class_or_name, (), {})
 
 
 @pytest.mark.parametrize(
@@ -47,7 +67,7 @@ def test_class_name_accepts_valid_identifiers_and_wrapped_identifiers(class_name
 
 
 @pytest.mark.parametrize(
-    'class_name',
+    'class_or_name',
     [
         '',
         'not valid',
@@ -68,16 +88,18 @@ def test_class_name_accepts_valid_identifiers_and_wrapped_identifiers(class_name
         'package.123Class',
         'function.<>.Class',
         'function.<not valid>.Class',
+        type('bad-name', (), {}),
     ],
 )
-def test_class_name_rejects_invalid_identifier_shapes(class_name):
-    """Malformed names are rejected before any repr string is produced."""
-    with pytest.raises(ValueError, match=match(f'class_name must be a valid Python identifier, a valid Python identifier wrapped in angle brackets, or a dot-separated series of those, got {class_name!r}.')):
-        describe_call(class_name, (), {})
+def test_class_or_name_rejects_invalid_identifier_shapes(class_or_name):
+    """Malformed resolved names are rejected before any repr string is produced."""
+    resolved_name = class_or_name if isinstance(class_or_name, str) else class_or_name.__name__
+    with pytest.raises(ValueError, match=match(f'class_or_name must resolve to a valid Python identifier, a valid Python identifier wrapped in angle brackets, or a dot-separated series of those, got {resolved_name!r}.')):
+        describe_call(class_or_name, (), {})
 
 
 @pytest.mark.parametrize(
-    ('class_name', 'keyword'),
+    ('class_or_name', 'keyword'),
     [
         ('class', 'class'),
         ('None', 'None'),
@@ -85,12 +107,14 @@ def test_class_name_rejects_invalid_identifier_shapes(class_name):
         ('<class>', 'class'),
         ('<None>', 'None'),
         ('function.<class>.SomeClass', 'class'),
+        (type('class', (), {}), 'class'),
     ],
 )
-def test_class_name_rejects_python_keywords(class_name, keyword):
-    """Python keywords are rejected even when their identifier shape is valid."""
-    with pytest.raises(ValueError, match=match(f'class_name contains Python keyword {keyword!r}, which is not allowed: {class_name!r}.')):
-        describe_call(class_name, (), {})
+def test_class_or_name_rejects_python_keywords(class_or_name, keyword):
+    """Python keywords are rejected even when the resolved name shape is valid."""
+    resolved_name = class_or_name if isinstance(class_or_name, str) else class_or_name.__name__
+    with pytest.raises(ValueError, match=match(f'class_or_name resolves to Python keyword {keyword!r}, which is not allowed: {resolved_name!r}.')):
+        describe_call(class_or_name, (), {})
 
 
 @pytest.mark.parametrize(
@@ -123,7 +147,12 @@ def test_only_kwargs():
 
 
 def test_args_and_kwargs():
+    """Positional and keyword arguments are formatted the same for literal names and class objects."""
+    class ClassName:
+        pass
+
     assert describe_call('ClassName', (1, 2, 3), {'lol': 1, 'kek': 2}) == 'ClassName(1, 2, 3, lol=1, kek=2)'
+    assert describe_call(ClassName, (1, 2, 3), {'lol': 1, 'kek': 2}) == 'ClassName(1, 2, 3, lol=1, kek=2)'
     assert describe_call('ClassName', (1, 2, 3), {'lol': 'insert text', 'kek': 'insert the second text'}) == "ClassName(1, 2, 3, lol='insert text', kek='insert the second text')"
     assert describe_call('ClassName', (1, 2, 3), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text'}) == "ClassName(1, 2, 3, number_1=1, number_2=2, lol='insert text', kek='insert the second text')"
     assert describe_call('ClassName', (1, 2, 3), {'number_1': 1, 'number_2': 2, 'lol': 'insert text', 'kek': 'insert the second text', 'number_3': 3}) == "ClassName(1, 2, 3, number_1=1, number_2=2, lol='insert text', kek='insert the second text', number_3=3)"
@@ -403,11 +432,16 @@ def test_item_limit_with_placeholder_not_exceeded():
 
 def test_total_limit_basic():
     """
-    'C(a=1, b=2, c=3)' = 16 chars; total_limit=10.
+    total_limit drops chunks from the right for both literal names and class objects.
 
-    content 'C(a=1, b=2)' = 11 > 10; content 'C(a=1)' = 7 <= 10 -> output 'C(a=1, ...)'.
+    With total_limit=10, 'C(a=1, b=2)' (11 chars) is too long and 'C(a=1)' (6 chars)
+    fits, yielding 'C(a=1, ...)'.
     """
+    class C:
+        pass
+
     assert describe_call('C', (), {'a': 1, 'b': 2, 'c': 3}, total_limit=10) == 'C(a=1, ...)'
+    assert describe_call(C, (), {'a': 1, 'b': 2, 'c': 3}, total_limit=10) == 'C(a=1, ...)'
 
 
 def test_total_limit_not_exceeded():
@@ -436,9 +470,18 @@ def test_total_limit_minimum():
     assert len(result) > minimum
 
 
-def test_total_limit_too_small():
-    with pytest.raises(ValueError, match='total_limit'):
-        describe_call('ClassName', (1,), {}, total_limit=5)
+@pytest.mark.parametrize(
+    ('class_or_name', 'total_limit', 'resolved_name'),
+    [
+        ('ClassName', 5, 'ClassName'),
+        (_ClassNameContainer.Inner, 6, 'Inner'),
+    ],
+)
+def test_total_limit_too_small(class_or_name, total_limit, resolved_name):
+    """total_limit must fit the resolved call name and parentheses, using __name__ for class objects."""
+    minimum = len(resolved_name) + 2
+    with pytest.raises(ValueError, match=match(f'total_limit ({total_limit}) is too small for resolved class name {resolved_name!r}. Minimum is {minimum} (resolved class name length + 2 for parentheses).')):
+        describe_call(class_or_name, (1,), {}, total_limit=total_limit)
 
 
 def test_total_limit_negative():

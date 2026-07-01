@@ -1,5 +1,6 @@
+from inspect import isclass
 from keyword import iskeyword
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from printo.reprs import superrepr
 
@@ -53,7 +54,7 @@ def _serialize_items(  # noqa: PLR0913
 
 
 def describe_call(  # noqa: PLR0913
-    class_name: str,
+    class_or_name: Union[str, Type[Any]],
     args: Union[Tuple[Any, ...], List[Any]],
     kwargs: Dict[str, Any],
     serializer: Callable[[Any], str] = superrepr,
@@ -64,15 +65,19 @@ def describe_call(  # noqa: PLR0913
 ) -> str:
     from sigmatch import PossibleCallMatcher  # noqa: PLC0415
 
-    if not isinstance(class_name, str):
-        raise TypeError(f'class_name must be a string, got {type(class_name).__name__}.')
+    if isinstance(class_or_name, str):
+        class_name = class_or_name
+    elif isclass(class_or_name):
+        class_name = class_or_name.__name__
+    else:
+        raise TypeError(f'class_or_name must be a class name string or a class, got {type(class_or_name).__name__}.')
 
     for part in class_name.split('.'):
         identifier = part[1:-1] if part.startswith('<') and part.endswith('>') else part
         if not identifier.isidentifier():
-            raise ValueError(f'class_name must be a valid Python identifier, a valid Python identifier wrapped in angle brackets, or a dot-separated series of those, got {class_name!r}.')
+            raise ValueError(f'class_or_name must resolve to a valid Python identifier, a valid Python identifier wrapped in angle brackets, or a dot-separated series of those, got {class_name!r}.')
         if iskeyword(identifier):
-            raise ValueError(f'class_name contains Python keyword {identifier!r}, which is not allowed: {class_name!r}.')
+            raise ValueError(f'class_or_name resolves to Python keyword {identifier!r}, which is not allowed: {class_name!r}.')
 
     PossibleCallMatcher('.').match(serializer, raise_exception=True)
 
@@ -85,8 +90,8 @@ def describe_call(  # noqa: PLR0913
         minimum = len(class_name) + 2
         if total_limit < minimum:
             raise ValueError(
-                f'total_limit ({total_limit}) is too small for class name {class_name!r}. '
-                f'Minimum is {minimum} (class name length + 2 for parentheses).',
+                f'total_limit ({total_limit}) is too small for resolved class name {class_name!r}. '
+                f'Minimum is {minimum} (resolved class name length + 2 for parentheses).',
             )
 
     real_filters: Dict[Union[str, int], Callable[[Any], bool]] = (

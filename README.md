@@ -47,7 +47,7 @@ You can also use [`instld`](https://github.com/pomponchik/instld) to quickly try
 
 The main function in this library is `describe_call`; it returns a string representing the initialization code for your object. There are three required positional parameters:
 
-- A class name.
+- A class name string or a class object.
 - A `list` or `tuple` of positional arguments.
 - A `dict` of keyword arguments, where the keys are the names of the arguments, and the values are arbitrary objects.
 
@@ -202,7 +202,7 @@ print(
 #> MyClass(a=1, ...)
 ```
 
-If `total_limit` is too small to fit even `ClassName()`, a `ValueError` is raised. The minimum valid value is `len(class_name) + 2`.
+If `total_limit` is too small to fit even `ClassName()`, a `ValueError` is raised. The minimum valid value is the length of the resolved class name plus 2.
 
 
 ## Auto mode
