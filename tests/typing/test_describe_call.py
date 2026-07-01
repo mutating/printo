@@ -6,8 +6,12 @@ from printo import describe_call, not_none
 
 @pytest.mark.mypy_testing
 def test_describe_call_basic():
-    """mypy accepts the basic call signature and infers str return type."""
-    _: str = describe_call('MyClass', (1, 2, 'text'), {'key': 1})
+    """mypy accepts literal and class-object call names and infers str return type."""
+    class SomeClass:
+        pass
+
+    _string_result: str = describe_call('MyClass', (1, 2, 'text'), {'key': 1})
+    _class_result: str = describe_call(SomeClass, (), {})
 
 
 @pytest.mark.mypy_testing
@@ -53,10 +57,16 @@ def test_describe_call_with_total_limit():
 
 
 @pytest.mark.mypy_testing
-def test_describe_call_invalid_class_name_type():
-    """mypy and runtime validation both reject non-string class_name values."""
-    with pytest.raises(TypeError, match=match('class_name must be a string, got int.')):
+def test_describe_call_invalid_class_or_name_type():
+    """mypy and runtime validation both reject invalid call name sources."""
+    class SomeClass:
+        pass
+
+    with pytest.raises(TypeError, match=match('class_or_name must be a class name string or a class, got int.')):
         describe_call(42, [], {})  # E: [arg-type]
+
+    with pytest.raises(TypeError, match=match('class_or_name must be a class name string or a class, got SomeClass.')):
+        describe_call(SomeClass(), [], {})  # E: [arg-type]
 
 
 @pytest.mark.mypy_testing
